@@ -10,20 +10,24 @@ body{font-family:Arial,sans-serif;max-width:1000px;margin:auto;padding:20px;back
 h1{text-align:center;}
 input{width:100%;padding:12px;font-size:18px;border:1px solid #ccc;border-radius:8px;box-sizing:border-box;}
 button{cursor:pointer;border:none;border-radius:6px;padding:7px 10px;margin:4px;}
+
 .tab-wrap{display:flex;gap:8px;margin:15px 0;}
 .tab-btn{flex:1;background:#e5e7eb;font-weight:bold;font-size:16px;padding:12px;}
 .tab-btn.active{background:#2563eb;color:white;}
 .tab-content{display:none;}
 .tab-content.active{display:block;}
+
 .add-btn{background:#2563eb;color:white;}
 .clear-btn{background:#555;color:white;}
+
 .item,.planner{background:white;border:1px solid #ddd;border-radius:10px;padding:18px;margin-top:12px;}
 .section{margin-top:16px;padding-top:12px;border-top:1px solid #ddd;}
 .small{color:#666;font-size:14px;}
+
 .badge{display:inline-block;background:#eee;padding:6px 10px;margin:4px;border-radius:6px;cursor:pointer;}
 .badge:hover{background:#dcdcdc;}
 
-.kind{display:inline-block;padding:3px 8px;border-radius:999px;font-size:12px;font-weight:bold;margin-left:6px;}
+.kind{display:inline-block;padding:3px 8px;border-radius:999px;font-size:12px;font-weight:bold;margin-left:6px;white-space:nowrap;}
 .craft{background:#e0f2fe;color:#0369a1;}
 .dropitem{background:#fef3c7;color:#92400e;}
 .shop{background:#dcfce7;color:#166534;}
@@ -34,10 +38,19 @@ button{cursor:pointer;border:none;border-radius:6px;padding:7px 10px;margin:4px;
 .target-chip span{cursor:pointer;}
 .target-chip button{background:#ef4444;color:white;padding:2px 6px;margin:0;font-size:12px;}
 
-.total-card,.material-card,.craft-card{background:#f8f8f8;border:1px solid #ddd;border-radius:8px;padding:10px;margin:8px 0;}
+.total-card,.material-card,.craft-card{
+    background:#f8f8f8;
+    border:1px solid #ddd;
+    border-radius:8px;
+    padding:10px;
+    margin:8px 0;
+}
+
 .done-card{background:#ecfdf5;border-color:#86efac;}
+
 .total-title,.material-title,.craft-title{font-weight:bold;cursor:pointer;}
 .total-title:hover,.material-title:hover,.craft-title:hover{text-decoration:underline;}
+
 .material-drop{margin-top:6px;color:#444;font-size:14px;}
 
 .item-grid{
@@ -46,33 +59,61 @@ button{cursor:pointer;border:none;border-radius:6px;padding:7px 10px;margin:4px;
     gap:8px;
     margin-top:8px;
 }
+
 .grid-card{
     background:#f8f8f8;
     border:1px solid #ddd;
     border-radius:8px;
     padding:10px;
 }
+
 .grid-card.done-card{background:#ecfdf5;border-color:#86efac;}
+
+.row-card{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:10px;
+    flex-wrap:wrap;
+}
+
+.item-main{
+    display:flex;
+    align-items:center;
+    gap:6px;
+    flex-wrap:wrap;
+    min-width:260px;
+}
+
+.item-controls{
+    display:flex;
+    align-items:center;
+    gap:8px;
+    flex-wrap:wrap;
+    margin-left:auto;
+}
+
+.qty-btn{background:#e5e7eb;font-weight:bold;padding:4px 9px;}
+.qty-num{font-weight:bold;min-width:20px;text-align:center;}
+.remain{font-weight:bold;}
+.remain.need{color:#dc2626;}
+.remain.done-text{color:#16a34a;}
 
 .craft-card{
     display:grid;
-    grid-template-columns:1fr 1.3fr;
-    gap:12px;
-    align-items:start;
+    grid-template-columns:1.1fr 1fr;
+    gap:10px;
+    align-items:center;
 }
+
 .craft-left{min-width:0;}
-.craft-right{
-    background:white;
-    border:1px solid #e5e7eb;
-    border-radius:8px;
-    padding:10px;
-}
 .craft-material-list{
     display:flex;
     flex-wrap:wrap;
     gap:6px;
-    margin-top:6px;
+    justify-content:flex-start;
 }
+
 .simple-material{
     display:inline-block;
     background:#f1f5f9;
@@ -81,15 +122,10 @@ button{cursor:pointer;border:none;border-radius:6px;padding:7px 10px;margin:4px;
     padding:5px 9px;
     font-size:13px;
     cursor:pointer;
+    white-space:nowrap;
 }
-.simple-material:hover{background:#e2e8f0;}
 
-.qty-box{display:flex;align-items:center;gap:8px;margin-top:8px;flex-wrap:wrap;}
-.qty-btn{background:#e5e7eb;font-weight:bold;padding:4px 9px;}
-.qty-num{font-weight:bold;min-width:20px;text-align:center;}
-.remain{font-weight:bold;}
-.remain.need{color:#dc2626;}
-.remain.done-text{color:#16a34a;}
+.simple-material:hover{background:#e2e8f0;}
 
 .progress-wrap{background:#e5e7eb;border-radius:999px;height:14px;margin:8px 0 16px 0;overflow:hidden;}
 .progress-bar{height:100%;background:#22c55e;width:0%;}
@@ -97,6 +133,8 @@ button{cursor:pointer;border:none;border-radius:6px;padding:7px 10px;margin:4px;
 @media(max-width:700px){
     .item-grid{grid-template-columns:1fr;}
     .craft-card{grid-template-columns:1fr;}
+    .row-card{align-items:flex-start;}
+    .item-controls{margin-left:0;}
 }
 </style>
 </head>
@@ -171,7 +209,9 @@ function displayName(name){
     return found ? (found.koreanname || found.name) : name;
 }
 
-function safeText(text){return String(text ?? "").replace(/'/g, "\\'");}
+function safeText(text){
+    return String(text ?? "").replace(/\\/g, "\\\\").replace(/'/g, "\\'");
+}
 
 function searchByName(name){
     showTab("itemTab");
@@ -221,7 +261,9 @@ function shopBadge(item){
     return text ? `<span class="kind shop">구매 가능: ${text}</span>` : "";
 }
 
-function doneBadge(){return `<span class="kind done">완료</span>`;}
+function doneBadge(){
+    return `<span class="kind done">완료</span>`;
+}
 
 function droppedByText(item){
     if(!item || !Array.isArray(item.dropped_by) || item.dropped_by.length === 0) return "-";
@@ -317,7 +359,7 @@ function ownedControlHtml(name, needCount){
     const done = remain === 0;
 
     return `
-        <div class="qty-box">
+        <div class="item-controls">
             <span>필요 ${needCount}</span>
             <span>보유</span>
             <button class="qty-btn" onclick="removeOwned('${safeText(name)}')">-</button>
@@ -420,11 +462,10 @@ function craftSimpleMaterialsHtml(craftName, needCount){
     const item = nameMap[craftName];
 
     if(!item || !Array.isArray(item.recipe) || item.recipe.length === 0){
-        return "<span class='small'>필요 재료 정보 없음</span>";
+        return "<span class='small'>재료 정보 없음</span>";
     }
 
     return `
-        <div class="small"><strong>필요 조합 재료</strong></div>
         <div class="craft-material-list">
             ${item.recipe.map(obj => {
                 const materialName = Object.keys(obj)[0];
@@ -476,16 +517,19 @@ function craftMaterialsHtml(craftTotals){
         return `
             <div class="craft-card ${done ? "done-card" : ""}">
                 <div class="craft-left">
-                    <div class="craft-title" onclick="searchByName('${safeText(name)}')">
-                        ${displayName(name)} x${needCount}
-                        ${itemKindBadge(item)}
-                        ${done ? doneBadge() : ""}
+                    <div class="row-card">
+                        <div class="item-main">
+                            <span class="craft-title" onclick="searchByName('${safeText(name)}')">
+                                ${displayName(name)} x${needCount}
+                            </span>
+                            ${itemKindBadge(item)}
+                            ${done ? doneBadge() : ""}
+                        </div>
+                        ${ownedControlHtml(name, needCount)}
                     </div>
-                    <div class="small">획득 방식: 조합</div>
-                    ${ownedControlHtml(name, needCount)}
                 </div>
 
-                <div class="craft-right">
+                <div>
                     ${craftSimpleMaterialsHtml(name, needCount)}
                 </div>
             </div>
@@ -532,13 +576,17 @@ function directMaterialsHtml(directTotals){
 
                         return `
                             <div class="grid-card ${remain === 0 ? "done-card" : ""}">
-                                <div class="total-title" onclick="searchByName('${safeText(entry.name)}')">
-                                    ${displayName(entry.name)} x${entry.count}
-                                    ${itemKindBadge(material)}
-                                    ${shopBadge(material)}
-                                    ${remain === 0 ? doneBadge() : ""}
+                                <div class="row-card">
+                                    <div class="item-main">
+                                        <span class="total-title" onclick="searchByName('${safeText(entry.name)}')">
+                                            ${displayName(entry.name)} x${entry.count}
+                                        </span>
+                                        ${itemKindBadge(material)}
+                                        ${shopBadge(material)}
+                                        ${remain === 0 ? doneBadge() : ""}
+                                    </div>
+                                    ${ownedControlHtml(entry.name, entry.count)}
                                 </div>
-                                ${ownedControlHtml(entry.name, entry.count)}
                             </div>
                         `;
                     }).join("")}
