@@ -244,16 +244,35 @@ function updatePlanner(){
     const totals = {};
 
     targets.forEach(targetName => {
-        const item = nameMap[targetName];
-        if(!item || !Array.isArray(item.recipe)) return;
+
+    const item = nameMap[targetName];
+
+    if(!item) return;
+
+    // 제작 아이템
+    if(Array.isArray(item.recipe) && item.recipe.length > 0){
 
         item.recipe.forEach(obj => {
+
             const materialName = Object.keys(obj)[0];
             const count = obj[materialName];
 
-            totals[materialName] = (totals[materialName] || 0) + count;
+            totals[materialName] =
+                (totals[materialName] || 0) + count;
+
         });
-    });
+
+    }
+
+    // 드랍 아이템
+    else{
+
+        totals[item.name] =
+            (totals[item.name] || 0) + 1;
+
+    }
+
+});
 
     const materialNames = Object.keys(totals);
 
