@@ -167,7 +167,6 @@ button{cursor:pointer;border:none;border-radius:6px;padding:7px 10px;margin:4px;
 <div id="status" class="small">데이터 불러오는 중...</div>
 
 <div id="itemTab" class="tab-content active">
-
     <div class="planner">
         <h3>아이템 검색</h3>
         <input id="search" placeholder="아이템 이름 입력... 예: 화신의 눈, 스캐럽 본">
@@ -211,6 +210,96 @@ let nameMap = {};
 let targets = JSON.parse(localStorage.getItem("targets") || "[]");
 let inventory = JSON.parse(localStorage.getItem("inventory") || "{}");
 
+const monsterNameMap = {
+  "Agareth": "아가레스",
+  "Ancient Ent": "에인션트 엔트",
+  "Arcane Construct": "아케인 컨스트럭트",
+  "Archangel Samael": "대천사 사미엘",
+  "Blood Wraith": "블러드 레이스",
+  "Blue Murloc": "푸른 멀록",
+  "Bone Dragon": "본 드래곤",
+  "Castle Avalon Gatekeeper": "아발론 성문지기",
+  "Corruptor Rectus": "커럽터 렉터스",
+  "Death Fiend": "데스 핀드",
+  "Demon Lord Beriel": "마왕 베리엘",
+  "Dragon Turtle": "드래곤 터틀",
+  "Duchy of Wallachia Apostle": "왈라키아 공국 사도",
+  "Duchy of Wallachia Archer": "왈라키아 공국 궁수",
+  "Duchy of Wallachia Assassin": "왈라키아 공국 암살자",
+  "Duchy of Wallachia Cavalry": "왈라키아 공국 기병",
+  "Duchy of Wallachia Count": "왈라키아 백작",
+  "Duchy of Wallachia Guardian": "왈라키아 공국 수호병",
+  "Duchy of Wallachia Soldier": "왈라키아 공국 병사",
+  "Duke Lazarus": "공작 라자루스",
+  "Elemental of Chaos": "혼돈의 정령",
+  "Evil Lava Spawn": "이블 라바 스폰",
+  "Flame Nightmare": "플레임 나이트메어",
+  "Frostspider Lord": "프로스트스파이더 로드",
+  "Frostspider Queen": "프로스트스파이더 퀸",
+  "Furbolg": "펄볼그",
+  "Furbolg Giant": "펄볼그 자이언트",
+  "Furbolg Shaman": "펄볼그 주술사",
+  "Furbolg Tracker": "펄볼그 추적자",
+  "Gaia": "지신 가이아",
+  "Giant Golem": "자이언트 골렘",
+  "Green Murloc": "초록 멀록",
+  "Guardian of Sea": "바다의 수호자",
+  "Ice Troll": "아이스 트롤",
+  "Ice Troll Priest": "아이스 트롤 사제",
+  "Ifrit": "이프리트",
+  "Jack o Lantern": "잭 오 랜턴",
+  "King Crab": "킹 크랩",
+  "King Kong": "킹콩",
+  "Lava Ancient": "라바 에인션트",
+  "Lava Hatchling": "라바 해츨링",
+  "Lava Spawn": "라바 스폰",
+  "Lava Worm": "라바 웜",
+  "Mage Lord": "메이지 로드",
+  "Mammoth": "매머드",
+  "Mana Ancient": "마나 에인션트",
+  "Murloc Giant": "멀록 자이언트",
+  "Nereid": "네레이드",
+  "Orange Murloc": "주황 멀록",
+  "Polar Bear": "폴라 베어",
+  "Polar Bear Giant": "폴라 베어 자이언트",
+  "Protector of Nature": "자연의 수호자",
+  "Purple Murloc": "보라 멀록",
+  "Ruler of Flames Ragnaar": "화염의 지배자 라그나르",
+  "Ruler of the Lav Sea Hydra": "해신 하이드라",
+  "Scarab": "스캐럽",
+  "Sea Guardian": "해양 수호자",
+  "Sealed Weapon": "봉인된 무기",
+  "Shadow Dragon Irbert": "암흑룡 이르베르트",
+  "Shop": "상점",
+  "Silverback Wolf": "실버백 울프",
+  "Skeletal King Desperia": "해골왕 데스페리아",
+  "Solid Golem": "솔리드 골렘",
+  "Soul of Everfrost": "영원의 서리의 영혼",
+  "Spirit Beast": "스피릿 비스트",
+  "Stone Golem": "스톤 골렘",
+  "Styrix, the Harvester of Souls": "영혼 수확자 스티릭스",
+  "Tentacle Lord": "텐타클 로드",
+  "The 3rd Army's Guardian Angel": "제3군단의 수호천사",
+  "The Devil's Right Arm Corrupt Angel": "악마의 오른팔 타락천사",
+  "Tide Caller": "타이드 콜러",
+  "Troll": "트롤",
+  "Troll Berserker": "트롤 광전사",
+  "Troll Lord": "트롤 로드",
+  "Troll Shaman": "트롤 주술사",
+  "Turtle Lord": "터틀 로드",
+  "Tutorial": "튜토리얼",
+  "Underlord Agareth": "언더로드 아가레스",
+  "Valtora": "뇌신 발토라",
+  "Wallachia Death Knight Lord": "왈라키아 데스 나이트 로드",
+  "Wallachia Mad Clown": "왈라키아 매드 클라운",
+  "Wallachia Monstrosity": "왈라키아 몬스트로시티",
+  "Wallachia Wraith": "왈라키아 레이스",
+  "Walrus": "월러스",
+  "White Murloc": "하얀 멀록",
+  "Wings of Death": "죽음의 날개",
+  "Zombie Lord": "좀비로드"
+};
+
 function saveTargets(){localStorage.setItem("targets", JSON.stringify(targets));}
 function saveInventory(){localStorage.setItem("inventory", JSON.stringify(inventory));}
 
@@ -224,6 +313,10 @@ function showTab(tabId){
 function displayName(name){
     const found = nameMap[name];
     return found ? (found.koreanname || found.name) : name;
+}
+
+function displayMonsterName(name){
+    return monsterNameMap[name] || name;
 }
 
 function safeText(text){
@@ -284,7 +377,7 @@ function doneBadge(){
 
 function droppedByText(item){
     if(!item || !Array.isArray(item.dropped_by) || item.dropped_by.length === 0) return "-";
-    return item.dropped_by.join(", ");
+    return item.dropped_by.map(displayMonsterName).join(", ");
 }
 
 function materialDropInfo(materialName){
@@ -369,13 +462,7 @@ function removeOwned(name){
 
 function toggleCraftOwned(name, needCount){
     const current = inventory[name] || 0;
-
-    if(current >= needCount){
-        inventory[name] = 0;
-    }else{
-        inventory[name] = needCount;
-    }
-
+    inventory[name] = current >= needCount ? 0 : needCount;
     saveInventory();
     updatePlanner();
 }
@@ -601,7 +688,7 @@ function directMaterialsHtml(directTotals){
         const count = directTotals[name];
 
         const monsters = hasDropInfo(material)
-            ? material.dropped_by
+            ? material.dropped_by.map(displayMonsterName)
             : ["드랍 몬스터 정보 없음"];
 
         const monsterKey = monsters.join(", ");
