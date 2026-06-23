@@ -180,32 +180,76 @@ function updatePlanner(){
         }
     });
 
-    const materialNames = Object.keys(totals);
+    const monsterGroups = {};
+    const craftItems = [];
 
-    if(materialNames.length === 0){
-        totalBox.innerHTML = "등록된 목표 아이템에 확인된 재료 정보가 없습니다.";
-        return;
-    }
-
-    totalBox.innerHTML = materialNames.map(name => {
+    Object.keys(totals).forEach(name => {
         const material = nameMap[name];
+        const count = totals[name];
 
-        return `
+        if(material && !isCraftItem(material)){
+            const monsters =
+                Array.isArray(material.dropped_by) && material.dropped_by.length > 0
+                ? material.dropped_by
+                : ["드랍 몬스터 정보 없음"];
+
+            monsters.forEach(monster => {
+                if(!monsterGroups[monster]){
+                    monsterGroups[monster] = [];
+                }
+
+                monsterGroups[monster].push({
+                    name,
+                    count
+                });
+            });
+        }else{
+            craftItems.push({
+                name,
+                count
+            });
+        }
+    });
+
+    let html = "";
+
+    html += `<h3>몬스터별 파밍 리스트</h3>`;
+
+    const monsterNames = Object.keys(monsterGroups);
+
+    if(monsterNames.length === 0){
+        html += `<p class="small">드랍 몬스터 정보가 없습니다.</p>`;
+    }else{
+        html += monsterNames.map(monster => `
             <div class="total-card">
-                <div class="total-title" onclick="searchByName('${safeText(name)}')">
-                    ${displayName(name)} x${totals[name]}
-                    ${itemKindBadge(material)}
-                </div>
+                <div class="total-title">${monster}</div>
                 <div class="small">
-                    ${
-                        material && !isCraftItem(material)
-                        ? `<strong>드랍 몬스터:</strong> ${droppedByText(material)}`
-                        : `<strong>획득 방식:</strong> 조합`
-                    }
+                    ${monsterGroups[monster].map(entry => `
+                        <div onclick="searchByName('${safeText(entry.name)}')" style="cursor:pointer; margin-top:4px;">
+                            ${displayName(entry.name)} x${entry.count}
+                            ${itemKindBadge(nameMap[entry.name])}
+                        </div>
+                    `).join("")}
                 </div>
             </div>
-        `;
-    }).join("");
+        `).join("");
+    }
+
+    if(craftItems.length > 0){
+        html += `<h3>조합 필요 아이템</h3>`;
+
+        html += craftItems.map(entry => `
+            <div class="total-card">
+                <div class="total-title" onclick="searchByName('${safeText(entry.name)}')">
+                    ${displayName(entry.name)} x${entry.count}
+                    ${itemKindBadge(nameMap[entry.name])}
+                </div>
+                <div class="small">획득 방식: 조합</div>
+            </div>
+        `).join("");
+    }
+
+    totalBox.innerHTML = html;
 }
 
 fetch("Module_Item_data.json")
