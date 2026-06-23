@@ -4,20 +4,15 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>더월드 알피지 조합 도우미</title>
-
 <style>
 body{
     font-family: Arial, sans-serif;
     max-width: 1000px;
-    margin: auto;
-    padding: 20px;
-    background: #f5f5f5;
+    margin:auto;
+    padding:20px;
+    background:#f5f5f5;
 }
-
-h1{
-    text-align:center;
-}
-
+h1{text-align:center;}
 input{
     width:100%;
     padding:12px;
@@ -25,103 +20,140 @@ input{
     border:1px solid #ccc;
     border-radius:8px;
 }
-
 .item{
     background:white;
     border:1px solid #ddd;
     border-radius:10px;
     padding:15px;
-    margin-top:10px;
+    margin-top:12px;
 }
-
-.item h3{
-    margin:0 0 10px 0;
+.badge{
+    display:inline-block;
+    background:#eee;
+    padding:4px 8px;
+    margin:3px;
+    border-radius:6px;
+    cursor:pointer;
 }
-
-.item p{
-    margin:5px 0;
-}
+.badge:hover{background:#dcdcdc;}
+.small{color:#666;font-size:14px;}
 </style>
 </head>
-
 <body>
 
 <h1>더월드 알피지 조합 도우미</h1>
 
-<input
-    id="search"
-    placeholder="아이템 이름을 입력하세요..."
->
+<input id="search" placeholder="아이템 이름을 입력하세요... 예: 토마토, 미지의 재료">
 
+<div id="status" class="small">데이터 불러오는 중...</div>
 <div id="results"></div>
 
 <script>
-
 let items = [];
+let nameMap = {};
+
+function displayName(name){
+    const found = nameMap[name];
+    return found ? (found.koreanname || found.name) : name;
+}
+
+function searchByName(name){
+    document.getElementById("search").value = displayName(name);
+    render(name);
+}
 
 fetch("Module_Item_data.json")
-.then(response => response.json())
+.then(res => res.json())
 .then(data => {
     items = data;
-    console.log("아이템 로드 완료:", items.length);
+
+    items.forEach(item => {
+        if(item.name) nameMap[item.name] = item;
+        if(item.koreanname) nameMap[item.koreanname] = item;
+        if(item.id) nameMap[item.id] = item;
+    });
+
+    document.getElementById("status").innerText =
+        "아이템 데이터 로드 완료: " + items.length + "개";
 })
-.catch(error => {
-    console.error("JSON 로드 실패", error);
+.catch(err => {
+    document.getElementById("status").innerText =
+        "JSON 파일을 불러오지 못했습니다.";
+    console.error(err);
 });
 
-document
-.getElementById("search")
-.addEventListener("input", function(){
+document.getElementById("search").addEventListener("input", function(){
+    render(this.value.trim());
+});
 
-    const keyword = this.value.trim().toLowerCase();
+function render(keyword){
+    const box = document.getElementById("results");
 
-    if(keyword === ""){
-        document.getElementById("results").innerHTML = "";
+    if(!keyword){
+        box.innerHTML = "";
         return;
     }
 
-    const results = items.filter(item => {
+    const lower = keyword.toLowerCase();
 
-        const koreanName =
-            (item.koreanname || "").toLowerCase();
+    const results = items.filter(item =>
+        (item.koreanname || "").toLowerCase().includes(lower) ||
+        (item.name || "").toLowerCase().includes(lower)
+    ).slice(0, 30);
 
-        const englishName =
-            (item.name || "").toLowerCase();
+    if(results.length === 0){
+        box.innerHTML = "<p>검색 결과가 없습니다.</p>";
+        return;
+    }
 
-        return koreanName.includes(keyword)
-            || englishName.includes(keyword);
+    box.innerHTML = results.map(item => {
 
-    });
+        const usedFor = item.required_by || [];
 
-    document.getElementById("results").innerHTML =
-    results.slice(0,50).map(item => `
+        const materials = items.filter(x =>
+            Array.isArray(x.required_by) &&
+            x.required_by.includes(item.name)
+        );
+
+        const notes = Array.isArray(item.notes) ? item.notes.join("<br>") : "-";
+
+        return `
         <div class="item">
-            <h3>${item.koreanname || item.name}</h3>
+            <h2>${item.koreanname || item.name}</h2>
 
-            <p>
-                <strong>영문명:</strong>
-                ${item.name || "-"}
-            </p>
+            <p><strong>영문명:</strong> ${item.name || "-"}</p>
+            <p><strong>종류:</strong> ${item.type || "-"}</p>
+            <p><strong>등급:</strong> ${item.rank || "-"}</p>
+            <p><strong>설명:</strong> ${item.description || "-"}</p>
+            <p><strong>획득 정보:</strong><br>${notes}</p>
 
-            <p>
-                <strong>종류:</strong>
-                ${item.type || "-"}
-            </p>
+            <hr>
 
-            <p>
-                <strong>등급:</strong>
-                ${item.rank || "-"}
-            </p>
+            <h3>이 아이템의 재료</h3>
+            ${
+                materials.length
+                ? materials.map(m =>
+                    `<span class="badge" onclick="searchByName('${m.name.replace(/'/g,"\\'")}')">
+                        ${m.koreanname || m.name}
+                    </span>`
+                  ).join("")
+                : "<p class='small'>확인된 재료 정보가 없습니다.</p>"
+            }
 
-            <p>
-                <strong>설명:</strong>
-                ${item.description || "-"}
-            </p>
+            <h3>이 아이템이 사용되는 조합</h3>
+            ${
+                usedFor.length
+                ? usedFor.map(name =>
+                    `<span class="badge" onclick="searchByName('${name.replace(/'/g,"\\'")}')">
+                        ${displayName(name)}
+                    </span>`
+                  ).join("")
+                : "<p class='small'>사용처 정보가 없습니다.</p>"
+            }
         </div>
-    `).join("");
-
-});
-
+        `;
+    }).join("");
+}
 </script>
 
 </body>
