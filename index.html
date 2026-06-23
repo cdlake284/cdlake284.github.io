@@ -1,10 +1,128 @@
 <!DOCTYPE html>
-<html>
+<html lang="ko">
 <head>
-    <title>아이템 조합 도우미</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>더월드 알피지 조합 도우미</title>
+
+<style>
+body{
+    font-family: Arial, sans-serif;
+    max-width: 1000px;
+    margin: auto;
+    padding: 20px;
+    background: #f5f5f5;
+}
+
+h1{
+    text-align:center;
+}
+
+input{
+    width:100%;
+    padding:12px;
+    font-size:18px;
+    border:1px solid #ccc;
+    border-radius:8px;
+}
+
+.item{
+    background:white;
+    border:1px solid #ddd;
+    border-radius:10px;
+    padding:15px;
+    margin-top:10px;
+}
+
+.item h3{
+    margin:0 0 10px 0;
+}
+
+.item p{
+    margin:5px 0;
+}
+</style>
 </head>
+
 <body>
-    <h1>아이템 조합 도우미</h1>
-    <p>사이트 제작 성공!</p>
+
+<h1>더월드 알피지 조합 도우미</h1>
+
+<input
+    id="search"
+    placeholder="아이템 이름을 입력하세요..."
+>
+
+<div id="results"></div>
+
+<script>
+
+let items = [];
+
+fetch("Module_Item_data.json")
+.then(response => response.json())
+.then(data => {
+    items = data;
+    console.log("아이템 로드 완료:", items.length);
+})
+.catch(error => {
+    console.error("JSON 로드 실패", error);
+});
+
+document
+.getElementById("search")
+.addEventListener("input", function(){
+
+    const keyword = this.value.trim().toLowerCase();
+
+    if(keyword === ""){
+        document.getElementById("results").innerHTML = "";
+        return;
+    }
+
+    const results = items.filter(item => {
+
+        const koreanName =
+            (item.koreanname || "").toLowerCase();
+
+        const englishName =
+            (item.name || "").toLowerCase();
+
+        return koreanName.includes(keyword)
+            || englishName.includes(keyword);
+
+    });
+
+    document.getElementById("results").innerHTML =
+    results.slice(0,50).map(item => `
+        <div class="item">
+            <h3>${item.koreanname || item.name}</h3>
+
+            <p>
+                <strong>영문명:</strong>
+                ${item.name || "-"}
+            </p>
+
+            <p>
+                <strong>종류:</strong>
+                ${item.type || "-"}
+            </p>
+
+            <p>
+                <strong>등급:</strong>
+                ${item.rank || "-"}
+            </p>
+
+            <p>
+                <strong>설명:</strong>
+                ${item.description || "-"}
+            </p>
+        </div>
+    `).join("");
+
+});
+
+</script>
+
 </body>
 </html>
