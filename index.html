@@ -50,6 +50,25 @@ input{
     border-radius:8px;
     margin-top:8px;
 }
+.material-card{
+    background:#f8f8f8;
+    border:1px solid #ddd;
+    border-radius:8px;
+    padding:10px;
+    margin:8px 0;
+}
+.material-title{
+    font-weight:bold;
+    cursor:pointer;
+}
+.material-title:hover{
+    text-decoration:underline;
+}
+.material-drop{
+    margin-top:6px;
+    color:#444;
+    font-size:14px;
+}
 </style>
 </head>
 
@@ -80,21 +99,11 @@ function searchByName(name){
     render(displayName(name));
 }
 
-function recipeHtml(recipe){
-    if(!Array.isArray(recipe) || recipe.length === 0){
-        return "<p class='small'>확인된 재료 정보가 없습니다.</p>";
+function rateText(rate){
+    if(typeof rate === "number"){
+        return Math.round(rate * 10000) / 100 + "%";
     }
-
-    return recipe.map(obj => {
-        const materialName = Object.keys(obj)[0];
-        const count = obj[materialName];
-
-        return `
-            <span class="badge" onclick="searchByName('${safeText(materialName)}')">
-                ${displayName(materialName)} x${count}
-            </span>
-        `;
-    }).join("");
+    return "-";
 }
 
 function notesHtml(notes){
@@ -115,19 +124,71 @@ function droppedByHtml(item){
         return "<p class='small'>드랍 몬스터 정보가 없습니다.</p>";
     }
 
-    const rateText =
-        typeof rate === "number"
-        ? Math.round(rate * 10000) / 100 + "%"
-        : "-";
-
     return `
         <div class="drop">
             <strong>드랍 몬스터:</strong><br>
             ${droppedBy.map(monster => `• ${monster}`).join("<br>")}
             <br><br>
-            <strong>드랍률:</strong> ${rateText}
+            <strong>드랍률:</strong> ${rateText(rate)}
         </div>
     `;
+}
+
+function materialDropInfo(materialName){
+    const material = nameMap[materialName];
+
+    if(!material){
+        return "<div class='material-drop'>획득 정보 없음</div>";
+    }
+
+    const droppedBy = material.dropped_by || [];
+    const notes = material.notes || [];
+    const rate = material.droprate;
+
+    let html = "<div class='material-drop'>";
+
+    if(Array.isArray(droppedBy) && droppedBy.length > 0){
+        html += `<strong>드랍 몬스터:</strong> ${droppedBy.join(", ")}<br>`;
+    }
+
+    if(typeof rate === "number"){
+        html += `<strong>드랍률:</strong> ${rateText(rate)}<br>`;
+    }
+
+    if(Array.isArray(notes) && notes.length > 0){
+        html += `<strong>획득처:</strong> ${notesHtml(notes)}`;
+    }
+
+    if(
+        (!Array.isArray(droppedBy) || droppedBy.length === 0) &&
+        typeof rate !== "number" &&
+        (!Array.isArray(notes) || notes.length === 0)
+    ){
+        html += "획득 정보 없음";
+    }
+
+    html += "</div>";
+    return html;
+}
+
+function recipeHtml(recipe){
+    if(!Array.isArray(recipe) || recipe.length === 0){
+        return "<p class='small'>확인된 재료 정보가 없습니다.</p>";
+    }
+
+    return recipe.map(obj => {
+        const materialName = Object.keys(obj)[0];
+        const count = obj[materialName];
+
+        return `
+            <div class="material-card">
+                <div class="material-title" onclick="searchByName('${safeText(materialName)}')">
+                    ${displayName(materialName)} x${count}
+                </div>
+                ${materialDropInfo(materialName)}
+            </div>
+        `;
+    }).join("");
 }
 
 fetch("Module_Item_data.json")
