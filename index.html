@@ -16,18 +16,13 @@ button{cursor:pointer;border:none;border-radius:6px;padding:7px 10px;margin:4px;
 .tab-content{display:none;}
 .tab-content.active{display:block;}
 .add-btn{background:#2563eb;color:white;}
-.remove-btn{background:#ef4444;color:white;}
 .clear-btn{background:#555;color:white;}
 .item,.planner{background:white;border:1px solid #ddd;border-radius:10px;padding:18px;margin-top:12px;}
-.badge{display:inline-block;background:#eee;padding:6px 10px;margin:4px;border-radius:6px;cursor:pointer;}
-.badge:hover{background:#dcdcdc;}
 .section{margin-top:16px;padding-top:12px;border-top:1px solid #ddd;}
 .small{color:#666;font-size:14px;}
-.material-card,.total-card{background:#f8f8f8;border:1px solid #ddd;border-radius:8px;padding:10px;margin:8px 0;}
-.done-card{background:#ecfdf5;border-color:#86efac;}
-.material-title,.total-title{font-weight:bold;cursor:pointer;}
-.material-title:hover,.total-title:hover{text-decoration:underline;}
-.material-drop{margin-top:6px;color:#444;font-size:14px;}
+.badge{display:inline-block;background:#eee;padding:6px 10px;margin:4px;border-radius:6px;cursor:pointer;}
+.badge:hover{background:#dcdcdc;}
+
 .kind{display:inline-block;padding:3px 8px;border-radius:999px;font-size:12px;font-weight:bold;margin-left:6px;}
 .craft{background:#e0f2fe;color:#0369a1;}
 .dropitem{background:#fef3c7;color:#92400e;}
@@ -38,17 +33,40 @@ button{cursor:pointer;border:none;border-radius:6px;padding:7px 10px;margin:4px;
 .target-chip{display:inline-flex;align-items:center;gap:6px;background:#eef2ff;border:1px solid #c7d2fe;border-radius:999px;padding:6px 10px;margin:3px;}
 .target-chip span{cursor:pointer;}
 .target-chip button{background:#ef4444;color:white;padding:2px 6px;margin:0;font-size:12px;}
-.mini-planner{margin-bottom:12px;}
 
-.search-box h3{margin-top:0;}
+.total-card,.material-card,.craft-card{background:#f8f8f8;border:1px solid #ddd;border-radius:8px;padding:10px;margin:8px 0;}
+.done-card{background:#ecfdf5;border-color:#86efac;}
+.total-title,.material-title,.craft-title{font-weight:bold;cursor:pointer;}
+.total-title:hover,.material-title:hover,.craft-title:hover{text-decoration:underline;}
+.material-drop{margin-top:6px;color:#444;font-size:14px;}
+
+.item-grid{
+    display:grid;
+    grid-template-columns:repeat(2,1fr);
+    gap:8px;
+    margin-top:8px;
+}
+.grid-card{
+    background:#f8f8f8;
+    border:1px solid #ddd;
+    border-radius:8px;
+    padding:10px;
+}
+.grid-card.done-card{background:#ecfdf5;border-color:#86efac;}
+
 .qty-box{display:flex;align-items:center;gap:8px;margin-top:8px;flex-wrap:wrap;}
 .qty-btn{background:#e5e7eb;font-weight:bold;padding:4px 9px;}
 .qty-num{font-weight:bold;min-width:20px;text-align:center;}
 .remain{font-weight:bold;}
 .remain.need{color:#dc2626;}
 .remain.done-text{color:#16a34a;}
+
 .progress-wrap{background:#e5e7eb;border-radius:999px;height:14px;margin:8px 0 16px 0;overflow:hidden;}
 .progress-bar{height:100%;background:#22c55e;width:0%;}
+
+@media(max-width:700px){
+    .item-grid{grid-template-columns:1fr;}
+}
 </style>
 </head>
 
@@ -65,12 +83,12 @@ button{cursor:pointer;border:none;border-radius:6px;padding:7px 10px;margin:4px;
 
 <div id="itemTab" class="tab-content active">
 
-    <div class="planner search-box">
+    <div class="planner">
         <h3>아이템 검색</h3>
         <input id="search" placeholder="아이템 이름 입력... 예: 화신의 눈, 스캐럽 본">
     </div>
 
-    <div class="planner mini-planner">
+    <div class="planner">
         <h3>현재 목표 아이템</h3>
         <div id="targetListMini" class="target-row small">아직 추가된 목표 아이템이 없습니다.</div>
     </div>
@@ -85,8 +103,17 @@ button{cursor:pointer;border:none;border-radius:6px;padding:7px 10px;margin:4px;
         <button class="clear-btn" onclick="clearTargets()">목록 전체 삭제</button>
 
         <div class="section">
-            <h2>전체 필요 재료</h2>
+            <h2>파밍 진행도</h2>
             <div id="progressArea"></div>
+        </div>
+
+        <div class="section">
+            <h2>조합 필요 아이템</h2>
+            <div id="craftMaterials" class="small">조합 아이템이 있으면 여기에 표시됩니다.</div>
+        </div>
+
+        <div class="section">
+            <h2>직접 파밍 필요 재료</h2>
             <div id="totalMaterials" class="small">목표 아이템을 추가하면 여기에 총합이 표시됩니다.</div>
         </div>
     </div>
@@ -98,25 +125,14 @@ let nameMap = {};
 let targets = JSON.parse(localStorage.getItem("targets") || "[]");
 let inventory = JSON.parse(localStorage.getItem("inventory") || "{}");
 
-function saveTargets(){
-    localStorage.setItem("targets", JSON.stringify(targets));
-}
-
-function saveInventory(){
-    localStorage.setItem("inventory", JSON.stringify(inventory));
-}
+function saveTargets(){localStorage.setItem("targets", JSON.stringify(targets));}
+function saveInventory(){localStorage.setItem("inventory", JSON.stringify(inventory));}
 
 function showTab(tabId){
     document.querySelectorAll(".tab-content").forEach(tab => tab.classList.remove("active"));
     document.querySelectorAll(".tab-btn").forEach(btn => btn.classList.remove("active"));
-
     document.getElementById(tabId).classList.add("active");
-
-    if(tabId === "itemTab"){
-        document.querySelectorAll(".tab-btn")[0].classList.add("active");
-    }else{
-        document.querySelectorAll(".tab-btn")[1].classList.add("active");
-    }
+    document.querySelectorAll(".tab-btn")[tabId === "itemTab" ? 0 : 1].classList.add("active");
 }
 
 function displayName(name){
@@ -124,9 +140,7 @@ function displayName(name){
     return found ? (found.koreanname || found.name) : name;
 }
 
-function safeText(text){
-    return String(text ?? "").replace(/'/g, "\\'");
-}
+function safeText(text){return String(text ?? "").replace(/'/g, "\\'");}
 
 function searchByName(name){
     showTab("itemTab");
@@ -167,44 +181,31 @@ function shopRecipeText(item){
 }
 
 function itemKindBadge(item){
-    if(isCraftItem(item)){
-        return `<span class="kind craft">조합 아이템</span>`;
-    }
+    if(isCraftItem(item)) return `<span class="kind craft">조합 아이템</span>`;
     return `<span class="kind dropitem">드랍 아이템</span>`;
 }
 
 function shopBadge(item){
-    return shopRecipeText(item) ? `<span class="kind shop">구매 가능</span>` : "";
+    const text = shopRecipeText(item);
+    return text ? `<span class="kind shop">구매 가능: ${text}</span>` : "";
 }
 
-function doneBadge(){
-    return `<span class="kind done">완료</span>`;
-}
+function doneBadge(){return `<span class="kind done">완료</span>`;}
 
 function droppedByText(item){
-    if(!item || !Array.isArray(item.dropped_by) || item.dropped_by.length === 0){
-        return "-";
-    }
+    if(!item || !Array.isArray(item.dropped_by) || item.dropped_by.length === 0) return "-";
     return item.dropped_by.join(", ");
 }
 
 function materialDropInfo(materialName){
     const material = nameMap[materialName];
 
-    if(!material){
-        return "<div class='material-drop'>정보 없음</div>";
-    }
-
-    if(isCraftItem(material)){
-        return "<div class='material-drop'>획득 방식: 조합</div>";
-    }
-
-    const buyText = shopRecipeText(material);
+    if(!material) return "<div class='material-drop'>정보 없음</div>";
+    if(isCraftItem(material)) return "<div class='material-drop'>획득 방식: 조합</div>";
 
     return `
         <div class="material-drop">
             <strong>드랍 몬스터:</strong> ${droppedByText(material)}
-            ${buyText ? `<br><strong>구매 가능:</strong> ${buyText}` : ""}
         </div>
     `;
 }
@@ -269,61 +270,14 @@ function removeOwned(name){
 }
 
 function targetChipsHtml(){
-    if(targets.length === 0){
-        return "아직 추가된 목표 아이템이 없습니다.";
-    }
+    if(targets.length === 0) return "아직 추가된 목표 아이템이 없습니다.";
 
     return targets.map(name => `
         <div class="target-chip">
-            <span onclick="searchByName('${safeText(name)}')">
-                ${displayName(name)}
-            </span>
+            <span onclick="searchByName('${safeText(name)}')">${displayName(name)}</span>
             <button onclick="removeTarget('${safeText(name)}')">X</button>
         </div>
     `).join("");
-}
-
-function getTotals(){
-    const totals = {};
-
-    targets.forEach(targetName => {
-        const item = nameMap[targetName];
-        if(!item) return;
-
-        if(isCraftItem(item)){
-            item.recipe.forEach(obj => {
-                const materialName = Object.keys(obj)[0];
-                const count = obj[materialName];
-                addTotal(totals, materialName, count);
-            });
-        }else{
-            addTotal(totals, item.name, 1);
-        }
-    });
-
-    return totals;
-}
-
-function progressHtml(totals){
-    const names = Object.keys(totals);
-    if(names.length === 0) return "";
-
-    let needTotal = 0;
-    let ownedTotal = 0;
-
-    names.forEach(name => {
-        needTotal += totals[name];
-        ownedTotal += Math.min(inventory[name] || 0, totals[name]);
-    });
-
-    const percent = needTotal > 0 ? Math.round((ownedTotal / needTotal) * 100) : 0;
-
-    return `
-        <div class="small"><strong>전체 진행도:</strong> ${ownedTotal} / ${needTotal} (${percent}%)</div>
-        <div class="progress-wrap">
-            <div class="progress-bar" style="width:${percent}%"></div>
-        </div>
-    `;
 }
 
 function ownedControlHtml(name, needCount){
@@ -345,111 +299,197 @@ function ownedControlHtml(name, needCount){
     `;
 }
 
-function updatePlanner(){
-    const targetBox = document.getElementById("targetList");
-    const miniTargetBox = document.getElementById("targetListMini");
-    const totalBox = document.getElementById("totalMaterials");
-    const progressArea = document.getElementById("progressArea");
+function getPlannerData(){
+    const directTotals = {};
+    const craftTotals = {};
 
-    if(targetBox){
-        targetBox.innerHTML = targetChipsHtml();
-    }
+    targets.forEach(targetName => {
+        const item = nameMap[targetName];
+        if(!item) return;
 
-    if(miniTargetBox){
-        miniTargetBox.innerHTML = targetChipsHtml();
-    }
+        if(isCraftItem(item)){
+            if(Array.isArray(item.recipe)){
+                item.recipe.forEach(obj => {
+                    const materialName = Object.keys(obj)[0];
+                    const count = obj[materialName];
+                    const material = nameMap[materialName];
 
-    if(targets.length === 0){
-        totalBox.innerHTML = "목표 아이템을 추가하면 여기에 총합이 표시됩니다.";
-        progressArea.innerHTML = "";
-        return;
-    }
-
-    const totals = getTotals();
-
-    progressArea.innerHTML = progressHtml(totals);
-
-    const monsterGroups = {};
-    const craftItems = [];
-
-    Object.keys(totals).forEach(name => {
-        const material = nameMap[name];
-        const count = totals[name];
-
-        if(material && !isCraftItem(material)){
-            const monsters = hasDropInfo(material)
-                ? material.dropped_by
-                : ["드랍 몬스터 정보 없음"];
-
-            const monsterKey = monsters.join(", ");
-
-            if(!monsterGroups[monsterKey]){
-                monsterGroups[monsterKey] = [];
+                    if(isCraftItem(material)){
+                        addTotal(craftTotals, materialName, count);
+                    }else{
+                        addTotal(directTotals, materialName, count);
+                    }
+                });
             }
-
-            monsterGroups[monsterKey].push({ name, count });
         }else{
-            craftItems.push({ name, count });
+            addTotal(directTotals, item.name, 1);
         }
     });
 
-    let html = `<h3>몬스터별 파밍 리스트</h3>`;
+    return {directTotals, craftTotals};
+}
+
+function progressHtml(directTotals, craftTotals){
+    const totals = {...directTotals, ...craftTotals};
+    const names = Object.keys(totals);
+    if(names.length === 0) return "";
+
+    let needTotal = 0;
+    let ownedTotal = 0;
+
+    names.forEach(name => {
+        needTotal += totals[name];
+        ownedTotal += Math.min(inventory[name] || 0, totals[name]);
+    });
+
+    const percent = needTotal > 0 ? Math.round((ownedTotal / needTotal) * 100) : 0;
+
+    return `
+        <div class="small"><strong>전체 진행도:</strong> ${ownedTotal} / ${needTotal} (${percent}%)</div>
+        <div class="progress-wrap">
+            <div class="progress-bar" style="width:${percent}%"></div>
+        </div>
+    `;
+}
+
+function craftMaterialsHtml(craftTotals){
+    const names = Object.keys(craftTotals);
+
+    if(names.length === 0){
+        return "조합 필요 아이템이 없습니다.";
+    }
+
+    return names.map(name => {
+        const item = nameMap[name];
+        const needCount = craftTotals[name];
+        const owned = inventory[name] || 0;
+        const remain = Math.max(needCount - owned, 0);
+        const done = remain === 0;
+
+        let innerRecipe = "";
+
+        if(item && Array.isArray(item.recipe) && item.recipe.length > 0){
+            innerRecipe = `
+                <div class="section">
+                    <strong>필요 조합 재료</strong>
+                    <div class="item-grid">
+                        ${item.recipe.map(obj => {
+                            const materialName = Object.keys(obj)[0];
+                            const count = obj[materialName] * needCount;
+                            const material = nameMap[materialName];
+                            const ownedMaterial = inventory[materialName] || 0;
+                            const remainMaterial = Math.max(count - ownedMaterial, 0);
+
+                            return `
+                                <div class="grid-card ${remainMaterial === 0 ? "done-card" : ""}">
+                                    <div class="total-title" onclick="searchByName('${safeText(materialName)}')">
+                                        ${displayName(materialName)} x${count}
+                                        ${itemKindBadge(material)}
+                                        ${shopBadge(material)}
+                                        ${remainMaterial === 0 ? doneBadge() : ""}
+                                    </div>
+                                    ${!isCraftItem(material) ? `<div class="small">드랍 몬스터: ${droppedByText(material)}</div>` : `<div class="small">획득 방식: 조합</div>`}
+                                    ${ownedControlHtml(materialName, count)}
+                                </div>
+                            `;
+                        }).join("")}
+                    </div>
+                </div>
+            `;
+        }
+
+        return `
+            <div class="craft-card ${done ? "done-card" : ""}">
+                <div class="craft-title" onclick="searchByName('${safeText(name)}')">
+                    ${displayName(name)} x${needCount}
+                    ${itemKindBadge(item)}
+                    ${done ? doneBadge() : ""}
+                </div>
+                <div class="small">획득 방식: 조합</div>
+                ${ownedControlHtml(name, needCount)}
+                ${innerRecipe}
+            </div>
+        `;
+    }).join("");
+}
+
+function directMaterialsHtml(directTotals){
+    const monsterGroups = {};
+
+    Object.keys(directTotals).forEach(name => {
+        const material = nameMap[name];
+        const count = directTotals[name];
+
+        const monsters = hasDropInfo(material)
+            ? material.dropped_by
+            : ["드랍 몬스터 정보 없음"];
+
+        const monsterKey = monsters.join(", ");
+
+        if(!monsterGroups[monsterKey]){
+            monsterGroups[monsterKey] = [];
+        }
+
+        monsterGroups[monsterKey].push({name, count});
+    });
 
     const monsterNames = Object.keys(monsterGroups);
 
     if(monsterNames.length === 0){
-        html += `<p class="small">드랍 몬스터 정보가 없습니다.</p>`;
-    }else{
-        html += monsterNames.map(monster => `
+        return "직접 파밍 필요 재료가 없습니다.";
+    }
+
+    return `
+        <h3>몬스터별 파밍 리스트</h3>
+        ${monsterNames.map(monster => `
             <div class="total-card">
                 <div class="total-title">${monster}</div>
-                <div class="small">
+                <div class="item-grid">
                     ${monsterGroups[monster].map(entry => {
                         const material = nameMap[entry.name];
-                        const buyText = shopRecipeText(material);
                         const owned = inventory[entry.name] || 0;
                         const remain = Math.max(entry.count - owned, 0);
 
                         return `
-                            <div class="${remain === 0 ? "done-card" : ""}" style="padding:8px;border-radius:8px;margin-top:6px;">
-                                <div onclick="searchByName('${safeText(entry.name)}')" style="cursor:pointer;">
-                                    <strong>${displayName(entry.name)} x${entry.count}</strong>
+                            <div class="grid-card ${remain === 0 ? "done-card" : ""}">
+                                <div class="total-title" onclick="searchByName('${safeText(entry.name)}')">
+                                    ${displayName(entry.name)} x${entry.count}
                                     ${itemKindBadge(material)}
                                     ${shopBadge(material)}
                                     ${remain === 0 ? doneBadge() : ""}
                                 </div>
-                                ${buyText ? `<div class="small">구매 가능: ${buyText}</div>` : ""}
                                 ${ownedControlHtml(entry.name, entry.count)}
                             </div>
                         `;
                     }).join("")}
                 </div>
             </div>
-        `).join("");
+        `).join("")}
+    `;
+}
+
+function updatePlanner(){
+    const targetBox = document.getElementById("targetList");
+    const miniTargetBox = document.getElementById("targetListMini");
+    const totalBox = document.getElementById("totalMaterials");
+    const craftBox = document.getElementById("craftMaterials");
+    const progressArea = document.getElementById("progressArea");
+
+    if(targetBox) targetBox.innerHTML = targetChipsHtml();
+    if(miniTargetBox) miniTargetBox.innerHTML = targetChipsHtml();
+
+    if(targets.length === 0){
+        totalBox.innerHTML = "목표 아이템을 추가하면 여기에 총합이 표시됩니다.";
+        craftBox.innerHTML = "조합 아이템이 있으면 여기에 표시됩니다.";
+        progressArea.innerHTML = "";
+        return;
     }
 
-    if(craftItems.length > 0){
-        html += `<h3>조합 필요 아이템</h3>`;
+    const {directTotals, craftTotals} = getPlannerData();
 
-        html += craftItems.map(entry => {
-            const owned = inventory[entry.name] || 0;
-            const remain = Math.max(entry.count - owned, 0);
-
-            return `
-                <div class="total-card ${remain === 0 ? "done-card" : ""}">
-                    <div class="total-title" onclick="searchByName('${safeText(entry.name)}')">
-                        ${displayName(entry.name)} x${entry.count}
-                        ${itemKindBadge(nameMap[entry.name])}
-                        ${remain === 0 ? doneBadge() : ""}
-                    </div>
-                    <div class="small">획득 방식: 조합</div>
-                    ${ownedControlHtml(entry.name, entry.count)}
-                </div>
-            `;
-        }).join("");
-    }
-
-    totalBox.innerHTML = html;
+    progressArea.innerHTML = progressHtml(directTotals, craftTotals);
+    craftBox.innerHTML = craftMaterialsHtml(craftTotals);
+    totalBox.innerHTML = directMaterialsHtml(directTotals);
 }
 
 fetch("Module_Item_data.json")
@@ -500,7 +540,6 @@ function render(keyword){
 
     box.innerHTML = results.map(item => {
         const usedFor = item.required_by || [];
-        const buyText = shopRecipeText(item);
 
         return `
         <div class="item">
@@ -520,8 +559,6 @@ function render(keyword){
             <p><strong>설명:</strong> ${item.description || "-"}</p>
 
             ${!isCraftItem(item) ? `<p><strong>드랍 몬스터:</strong> ${droppedByText(item)}</p>` : ""}
-
-            ${buyText ? `<p><strong>구매 가능:</strong> ${buyText}</p>` : ""}
 
             <div class="section">
                 <h3>이 아이템의 재료</h3>
