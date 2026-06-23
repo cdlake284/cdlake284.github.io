@@ -18,11 +18,13 @@ button{cursor:pointer;border:none;border-radius:6px;padding:7px 10px;margin:4px;
 .badge:hover{background:#dcdcdc;}
 .section{margin-top:16px;padding-top:12px;border-top:1px solid #ddd;}
 .small{color:#666;font-size:14px;}
-.drop{background:#fff7e6;border:1px solid #ffd591;padding:10px;border-radius:8px;margin-top:8px;}
 .material-card,.total-card{background:#f8f8f8;border:1px solid #ddd;border-radius:8px;padding:10px;margin:8px 0;}
 .material-title,.total-title{font-weight:bold;cursor:pointer;}
 .material-title:hover,.total-title:hover{text-decoration:underline;}
 .material-drop{margin-top:6px;color:#444;font-size:14px;}
+.kind{display:inline-block;padding:3px 8px;border-radius:999px;font-size:12px;font-weight:bold;margin-left:6px;}
+.craft{background:#e0f2fe;color:#0369a1;}
+.dropitem{background:#fef3c7;color:#92400e;}
 </style>
 </head>
 
@@ -66,12 +68,15 @@ function searchByName(name){
     render(displayName(name));
 }
 
-function notesHtml(notes){
-    if(!Array.isArray(notes) || notes.length === 0) return "-";
+function isCraftItem(item){
+    return item && Array.isArray(item.recipe) && item.recipe.length > 0;
+}
 
-    return notes.map(note =>
-        String(note).replace("Where to obtain:", "획득처:")
-    ).join("<br>");
+function itemKindBadge(item){
+    if(isCraftItem(item)){
+        return `<span class="kind craft">조합 아이템</span>`;
+    }
+    return `<span class="kind dropitem">드랍 아이템</span>`;
 }
 
 function droppedByText(item){
@@ -81,38 +86,27 @@ function droppedByText(item){
     return item.dropped_by.join(", ");
 }
 
-function droppedByHtml(item){
-    if(!item || !Array.isArray(item.dropped_by) || item.dropped_by.length === 0){
-        return "<p class='small'>드랍 몬스터 정보가 없습니다.</p>";
-    }
-
-    return `
-        <div class="drop">
-            <strong>드랍 몬스터:</strong><br>
-            ${item.dropped_by.map(monster => `• ${monster}`).join("<br>")}
-        </div>
-    `;
-}
-
 function materialDropInfo(materialName){
     const material = nameMap[materialName];
 
     if(!material){
-        return "<div class='material-drop'>획득 정보 없음</div>";
+        return "<div class='material-drop'>정보 없음</div>";
     }
 
-    let html = "<div class='material-drop'>";
+    if(isCraftItem(material)){
+        return "<div class='material-drop'>조합으로 획득</div>";
+    }
 
-    html += `<strong>획득처:</strong> ${notesHtml(material.notes)}<br>`;
-    html += `<strong>드랍 몬스터:</strong> ${droppedByText(material)}`;
-
-    html += "</div>";
-    return html;
+    return `
+        <div class="material-drop">
+            <strong>드랍 몬스터:</strong> ${droppedByText(material)}
+        </div>
+    `;
 }
 
 function recipeHtml(recipe){
     if(!Array.isArray(recipe) || recipe.length === 0){
-        return "<p class='small'>확인된 재료 정보가 없습니다.</p>";
+        return "<p class='small'>조합 재료가 없습니다.</p>";
     }
 
     return recipe.map(obj => {
@@ -123,6 +117,7 @@ function recipeHtml(recipe){
             <div class="material-card">
                 <div class="material-title" onclick="searchByName('${safeText(materialName)}')">
                     ${displayName(materialName)} x${count}
+                    ${itemKindBadge(nameMap[materialName])}
                 </div>
                 ${materialDropInfo(materialName)}
             </div>
@@ -174,7 +169,7 @@ function updatePlanner(){
         const item = nameMap[targetName];
         if(!item) return;
 
-        if(Array.isArray(item.recipe) && item.recipe.length > 0){
+        if(isCraftItem(item)){
             item.recipe.forEach(obj => {
                 const materialName = Object.keys(obj)[0];
                 const count = obj[materialName];
@@ -199,10 +194,14 @@ function updatePlanner(){
             <div class="total-card">
                 <div class="total-title" onclick="searchByName('${safeText(name)}')">
                     ${displayName(name)} x${totals[name]}
+                    ${itemKindBadge(material)}
                 </div>
                 <div class="small">
-                    <strong>획득처:</strong> ${material ? notesHtml(material.notes) : "-"}<br>
-                    <strong>드랍 몬스터:</strong> ${droppedByText(material)}
+                    ${
+                        material && !isCraftItem(material)
+                        ? `<strong>드랍 몬스터:</strong> ${droppedByText(material)}`
+                        : `<strong>획득 방식:</strong> 조합`
+                    }
                 </div>
             </div>
         `;
@@ -258,7 +257,10 @@ function render(keyword){
 
         return `
         <div class="item">
-            <h2>${item.koreanname || item.name}</h2>
+            <h2>
+                ${item.koreanname || item.name}
+                ${itemKindBadge(item)}
+            </h2>
 
             <button class="add-btn" onclick="addTarget('${safeText(item.name)}')">
                 목표에 추가
@@ -269,11 +271,11 @@ function render(keyword){
             <p><strong>등급:</strong> ${item.rank || "-"}</p>
             <p><strong>설명:</strong> ${item.description || "-"}</p>
 
-            <div class="section">
-                <h3>획득 정보</h3>
-                <p>${notesHtml(item.notes)}</p>
-                ${droppedByHtml(item)}
-            </div>
+            ${
+                !isCraftItem(item)
+                ? `<p><strong>드랍 몬스터:</strong> ${droppedByText(item)}</p>`
+                : ""
+            }
 
             <div class="section">
                 <h3>이 아이템의 재료</h3>
