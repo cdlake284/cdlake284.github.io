@@ -21,7 +21,17 @@ input{
     border:1px solid #ccc;
     border-radius:8px;
 }
-.item{
+button{
+    cursor:pointer;
+    border:none;
+    border-radius:6px;
+    padding:7px 10px;
+    margin:4px;
+}
+.add-btn{background:#2563eb;color:white;}
+.remove-btn{background:#ef4444;color:white;}
+.clear-btn{background:#555;color:white;}
+.item,.planner{
     background:white;
     border:1px solid #ddd;
     border-radius:10px;
@@ -61,13 +71,22 @@ input{
     font-weight:bold;
     cursor:pointer;
 }
-.material-title:hover{
-    text-decoration:underline;
-}
+.material-title:hover{text-decoration:underline;}
 .material-drop{
     margin-top:6px;
     color:#444;
     font-size:14px;
+}
+.total-card{
+    background:#f9fafb;
+    border:1px solid #ddd;
+    border-radius:8px;
+    padding:12px;
+    margin:8px 0;
+}
+.total-title{
+    font-weight:bold;
+    font-size:16px;
 }
 </style>
 </head>
@@ -79,11 +98,24 @@ input{
 <input id="search" placeholder="아이템 이름을 입력하세요...">
 
 <div id="status" class="small">데이터 불러오는 중...</div>
+
+<div class="planner">
+    <h2>목표 아이템 목록</h2>
+    <div id="targetList" class="small">아직 추가된 목표 아이템이 없습니다.</div>
+    <button class="clear-btn" onclick="clearTargets()">목록 전체 삭제</button>
+
+    <div class="section">
+        <h2>전체 필요 재료</h2>
+        <div id="totalMaterials" class="small">목표 아이템을 추가하면 여기에 총합이 표시됩니다.</div>
+    </div>
+</div>
+
 <div id="results"></div>
 
 <script>
 let items = [];
 let nameMap = {};
+let targets = [];
 
 function displayName(name){
     const found = nameMap[name];
@@ -99,13 +131,6 @@ function searchByName(name){
     render(displayName(name));
 }
 
-function rateText(rate){
-    if(typeof rate === "number"){
-        return Math.round(rate * 10000) / 100 + "%";
-    }
-    return "-";
-}
-
 function notesHtml(notes){
     if(!Array.isArray(notes) || notes.length === 0){
         return "-";
@@ -118,7 +143,6 @@ function notesHtml(notes){
 
 function droppedByHtml(item){
     const droppedBy = item.dropped_by || [];
-    const rate = item.droprate;
 
     if(!Array.isArray(droppedBy) || droppedBy.length === 0){
         return "<p class='small'>드랍 몬스터 정보가 없습니다.</p>";
@@ -128,8 +152,6 @@ function droppedByHtml(item){
         <div class="drop">
             <strong>드랍 몬스터:</strong><br>
             ${droppedBy.map(monster => `• ${monster}`).join("<br>")}
-            <br><br>
-            <strong>드랍률:</strong> ${rateText(rate)}
         </div>
     `;
 }
@@ -143,16 +165,11 @@ function materialDropInfo(materialName){
 
     const droppedBy = material.dropped_by || [];
     const notes = material.notes || [];
-    const rate = material.droprate;
 
     let html = "<div class='material-drop'>";
 
     if(Array.isArray(droppedBy) && droppedBy.length > 0){
         html += `<strong>드랍 몬스터:</strong> ${droppedBy.join(", ")}<br>`;
-    }
-
-    if(typeof rate === "number"){
-        html += `<strong>드랍률:</strong> ${rateText(rate)}<br>`;
     }
 
     if(Array.isArray(notes) && notes.length > 0){
@@ -161,7 +178,6 @@ function materialDropInfo(materialName){
 
     if(
         (!Array.isArray(droppedBy) || droppedBy.length === 0) &&
-        typeof rate !== "number" &&
         (!Array.isArray(notes) || notes.length === 0)
     ){
         html += "획득 정보 없음";
@@ -186,6 +202,83 @@ function recipeHtml(recipe){
                     ${displayName(materialName)} x${count}
                 </div>
                 ${materialDropInfo(materialName)}
+            </div>
+        `;
+    }).join("");
+}
+
+function addTarget(itemName){
+    if(!targets.includes(itemName)){
+        targets.push(itemName);
+        updatePlanner();
+    }
+}
+
+function removeTarget(itemName){
+    targets = targets.filter(name => name !== itemName);
+    updatePlanner();
+}
+
+function clearTargets(){
+    targets = [];
+    updatePlanner();
+}
+
+function updatePlanner(){
+    const targetBox = document.getElementById("targetList");
+    const totalBox = document.getElementById("totalMaterials");
+
+    if(targets.length === 0){
+        targetBox.innerHTML = "아직 추가된 목표 아이템이 없습니다.";
+        totalBox.innerHTML = "목표 아이템을 추가하면 여기에 총합이 표시됩니다.";
+        return;
+    }
+
+    targetBox.innerHTML = targets.map(name => `
+        <span class="badge" onclick="searchByName('${safeText(name)}')">
+            ${displayName(name)}
+        </span>
+        <button class="remove-btn" onclick="removeTarget('${safeText(name)}')">삭제</button>
+    `).join("<br>");
+
+    const totals = {};
+
+    targets.forEach(targetName => {
+        const item = nameMap[targetName];
+        if(!item || !Array.isArray(item.recipe)) return;
+
+        item.recipe.forEach(obj => {
+            const materialName = Object.keys(obj)[0];
+            const count = obj[materialName];
+
+            totals[materialName] = (totals[materialName] || 0) + count;
+        });
+    });
+
+    const materialNames = Object.keys(totals);
+
+    if(materialNames.length === 0){
+        totalBox.innerHTML = "등록된 목표 아이템에 확인된 재료 정보가 없습니다.";
+        return;
+    }
+
+    totalBox.innerHTML = materialNames.map(name => {
+        const material = nameMap[name];
+        const notes = material ? notesHtml(material.notes) : "-";
+        const droppedBy =
+            material && Array.isArray(material.dropped_by) && material.dropped_by.length > 0
+            ? material.dropped_by.join(", ")
+            : "-";
+
+        return `
+            <div class="total-card">
+                <div class="total-title" onclick="searchByName('${safeText(name)}')" style="cursor:pointer;">
+                    ${displayName(name)} x${totals[name]}
+                </div>
+                <div class="small">
+                    <strong>획득처:</strong> ${notes}<br>
+                    <strong>드랍 몬스터:</strong> ${droppedBy}
+                </div>
             </div>
         `;
     }).join("");
@@ -241,6 +334,10 @@ function render(keyword){
         return `
         <div class="item">
             <h2>${item.koreanname || item.name}</h2>
+
+            <button class="add-btn" onclick="addTarget('${safeText(item.name)}')">
+                목표에 추가
+            </button>
 
             <p><strong>영문명:</strong> ${item.name || "-"}</p>
             <p><strong>종류:</strong> ${item.type || "-"}</p>
