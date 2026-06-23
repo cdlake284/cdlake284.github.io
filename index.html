@@ -265,7 +265,7 @@ const monsterNameMap = {
   "Agareth": "아가레스",
   "Ancient Ent": "에인션트 엔트",
   "Arcane Construct": "아케인 컨스트럭트",
-  "Archangel Samael": "대천사 사미엘",
+  "Archangel Samael": "주천사 사미엘",
   "Blood Wraith": "블러드 레이스",
   "Blue Murloc": "푸른 멀록",
   "Bone Dragon": "본 드래곤",
@@ -285,8 +285,8 @@ const monsterNameMap = {
   "Elemental of Chaos": "혼돈의 정령",
   "Evil Lava Spawn": "이블 라바 스폰",
   "Flame Nightmare": "플레임 나이트메어",
-  "Frostspider Lord": "프로스트스파이더 로드",
-  "Frostspider Queen": "프로스트스파이더 퀸",
+  "Frostspider Lord": "서리거미 제왕",
+  "Frostspider Queen": "서리거미 여왕",
   "Furbolg": "펄볼그",
   "Furbolg Giant": "펄볼그 자이언트",
   "Furbolg Shaman": "펄볼그 주술사",
@@ -305,7 +305,7 @@ const monsterNameMap = {
   "Lava Hatchling": "라바 해츨링",
   "Lava Spawn": "라바 스폰",
   "Lava Worm": "라바 웜",
-  "Mage Lord": "메이지 로드",
+  "Mage Lord": "마법사 왕",
   "Mammoth": "매머드",
   "Mana Ancient": "마나 에인션트",
   "Murloc Giant": "멀록 자이언트",
@@ -325,13 +325,13 @@ const monsterNameMap = {
   "Silverback Wolf": "실버백 울프",
   "Skeletal King Desperia": "해골왕 데스페리아",
   "Solid Golem": "솔리드 골렘",
-  "Soul of Everfrost": "영원의 서리의 영혼",
+  "Soul of Everfrost": "서리의 혼",
   "Spirit Beast": "스피릿 비스트",
   "Stone Golem": "스톤 골렘",
   "Styrix, the Harvester of Souls": "영혼 수확자 스티릭스",
-  "Tentacle Lord": "텐타클 로드",
-  "The 3rd Army's Guardian Angel": "제3군단의 수호천사",
-  "The Devil's Right Arm Corrupt Angel": "악마의 오른팔 타락천사",
+  "Tentacle Lord": "촉수 지배자",
+  "The 3rd Army's Guardian Angel": "능천사",
+  "The Devil's Right Arm Corrupt Angel": "타천사",
   "Tide Caller": "타이드 콜러",
   "Troll": "트롤",
   "Troll Berserker": "트롤 광전사",
@@ -341,10 +341,10 @@ const monsterNameMap = {
   "Tutorial": "튜토리얼",
   "Underlord Agareth": "언더로드 아가레스",
   "Valtora": "뇌신 발토라",
-  "Wallachia Death Knight Lord": "왈라키아 데스 나이트 로드",
-  "Wallachia Mad Clown": "왈라키아 매드 클라운",
-  "Wallachia Monstrosity": "왈라키아 몬스트로시티",
-  "Wallachia Wraith": "왈라키아 레이스",
+  "Wallachia Death Knight Lord": "데스 나이트 로드",
+  "Wallachia Mad Clown": "매드 클라운",
+  "Wallachia Monstrosity": "왈라키아 괴인",
+  "Wallachia Wraith": "왈라키아 망령",
   "Walrus": "월러스",
   "White Murloc": "하얀 멀록",
   "Wings of Death": "죽음의 날개",
@@ -422,13 +422,8 @@ function shopBadge(item){
     return text ? `<span class="kind shop">구매 가능: ${text}</span>` : "";
 }
 
-function doneBadge(){
-    return `<span class="kind done">완료</span>`;
-}
-
-function missingBadge(){
-    return `<span class="kind missing">미보유</span>`;
-}
+function doneBadge(){return `<span class="kind done">완료</span>`;}
+function missingBadge(){return `<span class="kind missing">미보유</span>`;}
 
 function droppedByText(item){
     if(!item || !Array.isArray(item.dropped_by) || item.dropped_by.length === 0) return "-";
@@ -596,6 +591,31 @@ function collectLeafMaterials(itemName, multiplier, totals){
     }
 }
 
+function isCraftCompleteByMaterials(craftName, needCount){
+    if(isCraftOwned(craftName, needCount)) return true;
+
+    const item = nameMap[craftName];
+    if(!item || !Array.isArray(item.recipe)) return false;
+
+    const requiredLeaves = {};
+    collectLeafMaterials(craftName, needCount, requiredLeaves);
+
+    return Object.keys(requiredLeaves).every(name => {
+        return (inventory[name] || 0) >= requiredLeaves[name];
+    });
+}
+
+function isMaterialComplete(materialName, needCount){
+    const material = nameMap[materialName];
+
+    if(isCraftItem(material)){
+        if(isCraftOwned(materialName, needCount)) return true;
+        return isCraftCompleteByMaterials(materialName, needCount);
+    }
+
+    return (inventory[materialName] || 0) >= needCount;
+}
+
 function handleMaterialForPlanner(materialName, count, directTotals, craftTotals){
     const material = nameMap[materialName];
 
@@ -619,9 +639,7 @@ function getPlannerData(){
         if(!item) return;
 
         if(isCraftItem(item)){
-            if(isCraftOwned(targetName, 1)){
-                return;
-            }
+            if(isCraftOwned(targetName, 1)) return;
 
             if(Array.isArray(item.recipe)){
                 item.recipe.forEach(obj => {
@@ -831,7 +849,13 @@ function targetDetailsHtml(){
 
                         let statusText = "";
                         if(isCraftItem(material)){
-                            statusText = done ? "조합 가능 / 보유" : "미보유";
+                            if(isCraftOwned(materialName, count)){
+                                statusText = "보유";
+                            }else if(done){
+                                statusText = "재료 충족";
+                            }else{
+                                statusText = "미보유";
+                            }
                         }else{
                             statusText = `${Math.min(owned, count)} / ${count}`;
                         }
