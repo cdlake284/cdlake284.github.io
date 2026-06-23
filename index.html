@@ -31,6 +31,40 @@ button{cursor:pointer;border:none;border-radius:6px;padding:7px 10px;margin:4px;
 .craft{background:#e0f2fe;color:#0369a1;}
 .dropitem{background:#fef3c7;color:#92400e;}
 .shop{background:#dcfce7;color:#166534;}
+
+.target-row{
+    display:flex;
+    flex-wrap:wrap;
+    gap:6px;
+    align-items:center;
+}
+
+.target-chip{
+    display:inline-flex;
+    align-items:center;
+    gap:6px;
+    background:#eef2ff;
+    border:1px solid #c7d2fe;
+    border-radius:999px;
+    padding:6px 10px;
+    margin:3px;
+}
+
+.target-chip span{
+    cursor:pointer;
+}
+
+.target-chip button{
+    background:#ef4444;
+    color:white;
+    padding:2px 6px;
+    margin:0;
+    font-size:12px;
+}
+
+.mini-planner{
+    margin-bottom:12px;
+}
 </style>
 </head>
 
@@ -46,6 +80,11 @@ button{cursor:pointer;border:none;border-radius:6px;padding:7px 10px;margin:4px;
 <div id="status" class="small">데이터 불러오는 중...</div>
 
 <div id="itemTab" class="tab-content active">
+    <div class="planner mini-planner">
+        <h3>현재 목표 아이템</h3>
+        <div id="targetListMini" class="target-row small">아직 추가된 목표 아이템이 없습니다.</div>
+    </div>
+
     <input id="search" placeholder="아이템 이름을 입력하세요...">
     <div id="results"></div>
 </div>
@@ -53,7 +92,7 @@ button{cursor:pointer;border:none;border-radius:6px;padding:7px 10px;margin:4px;
 <div id="farmTab" class="tab-content">
     <div class="planner">
         <h2>목표 아이템 목록</h2>
-        <div id="targetList" class="small">아직 추가된 목표 아이템이 없습니다.</div>
+        <div id="targetList" class="target-row small">아직 추가된 목표 아이템이 없습니다.</div>
         <button class="clear-btn" onclick="clearTargets()">목록 전체 삭제</button>
 
         <div class="section">
@@ -194,7 +233,6 @@ function addTarget(itemName){
     if(!targets.includes(itemName)){
         targets.push(itemName);
         updatePlanner();
-        showTab("farmTab");
     }
 }
 
@@ -212,22 +250,38 @@ function addTotal(totals, name, count){
     totals[name] = (totals[name] || 0) + count;
 }
 
+function targetChipsHtml(){
+    if(targets.length === 0){
+        return "아직 추가된 목표 아이템이 없습니다.";
+    }
+
+    return targets.map(name => `
+        <div class="target-chip">
+            <span onclick="searchByName('${safeText(name)}')">
+                ${displayName(name)}
+            </span>
+            <button onclick="removeTarget('${safeText(name)}')">X</button>
+        </div>
+    `).join("");
+}
+
 function updatePlanner(){
     const targetBox = document.getElementById("targetList");
+    const miniTargetBox = document.getElementById("targetListMini");
     const totalBox = document.getElementById("totalMaterials");
 
+    if(targetBox){
+        targetBox.innerHTML = targetChipsHtml();
+    }
+
+    if(miniTargetBox){
+        miniTargetBox.innerHTML = targetChipsHtml();
+    }
+
     if(targets.length === 0){
-        targetBox.innerHTML = "아직 추가된 목표 아이템이 없습니다.";
         totalBox.innerHTML = "목표 아이템을 추가하면 여기에 총합이 표시됩니다.";
         return;
     }
-
-    targetBox.innerHTML = targets.map(name => `
-        <span class="badge" onclick="searchByName('${safeText(name)}')">
-            ${displayName(name)}
-        </span>
-        <button class="remove-btn" onclick="removeTarget('${safeText(name)}')">삭제</button>
-    `).join("<br>");
 
     const totals = {};
 
@@ -329,6 +383,8 @@ fetch("Module_Item_data.json")
 
     document.getElementById("status").innerText =
         "아이템 데이터 로드 완료: " + items.length + "개";
+
+    updatePlanner();
 })
 .catch(err => {
     document.getElementById("status").innerText =
