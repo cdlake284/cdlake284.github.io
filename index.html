@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>더월드 알피지 조합 도우미</title>
+
 <style>
 body{
     font-family: Arial, sans-serif;
@@ -30,20 +31,22 @@ input{
 .badge{
     display:inline-block;
     background:#eee;
-    padding:4px 8px;
-    margin:3px;
+    padding:6px 10px;
+    margin:4px;
     border-radius:6px;
     cursor:pointer;
 }
 .badge:hover{background:#dcdcdc;}
 .small{color:#666;font-size:14px;}
+hr{border:none;border-top:1px solid #ddd;margin:16px 0;}
 </style>
 </head>
+
 <body>
 
 <h1>더월드 알피지 조합 도우미</h1>
 
-<input id="search" placeholder="아이템 이름을 입력하세요... 예: 토마토, 미지의 재료">
+<input id="search" placeholder="아이템 이름을 입력하세요...">
 
 <div id="status" class="small">데이터 불러오는 중...</div>
 <div id="results"></div>
@@ -59,7 +62,24 @@ function displayName(name){
 
 function searchByName(name){
     document.getElementById("search").value = displayName(name);
-    render(name);
+    render(displayName(name));
+}
+
+function recipeHtml(recipe){
+    if(!Array.isArray(recipe) || recipe.length === 0){
+        return "<p class='small'>확인된 재료 정보가 없습니다.</p>";
+    }
+
+    return recipe.map(obj => {
+        const materialName = Object.keys(obj)[0];
+        const count = obj[materialName];
+
+        return `
+            <span class="badge" onclick="searchByName('${materialName.replace(/'/g,"\\'")}')">
+                ${displayName(materialName)} x${count}
+            </span>
+        `;
+    }).join("");
 }
 
 fetch("Module_Item_data.json")
@@ -107,14 +127,7 @@ function render(keyword){
     }
 
     box.innerHTML = results.map(item => {
-
         const usedFor = item.required_by || [];
-
-        const materials = items.filter(x =>
-            Array.isArray(x.required_by) &&
-            x.required_by.includes(item.name)
-        );
-
         const notes = Array.isArray(item.notes) ? item.notes.join("<br>") : "-";
 
         return `
@@ -125,20 +138,13 @@ function render(keyword){
             <p><strong>종류:</strong> ${item.type || "-"}</p>
             <p><strong>등급:</strong> ${item.rank || "-"}</p>
             <p><strong>설명:</strong> ${item.description || "-"}</p>
+
             <p><strong>획득 정보:</strong><br>${notes}</p>
 
             <hr>
 
             <h3>이 아이템의 재료</h3>
-            ${
-                materials.length
-                ? materials.map(m =>
-                    `<span class="badge" onclick="searchByName('${m.name.replace(/'/g,"\\'")}')">
-                        ${m.koreanname || m.name}
-                    </span>`
-                  ).join("")
-                : "<p class='small'>확인된 재료 정보가 없습니다.</p>"
-            }
+            ${recipeHtml(item.recipe)}
 
             <h3>이 아이템이 사용되는 조합</h3>
             ${
