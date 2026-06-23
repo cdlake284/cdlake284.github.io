@@ -8,8 +8,13 @@
 <style>
 body{font-family:Arial,sans-serif;max-width:1000px;margin:auto;padding:20px;background:#f5f5f5;}
 h1{text-align:center;}
-input{width:100%;padding:12px;font-size:18px;border:1px solid #ccc;border-radius:8px;}
+input{width:100%;padding:12px;font-size:18px;border:1px solid #ccc;border-radius:8px;box-sizing:border-box;}
 button{cursor:pointer;border:none;border-radius:6px;padding:7px 10px;margin:4px;}
+.tab-wrap{display:flex;gap:8px;margin:15px 0;}
+.tab-btn{flex:1;background:#e5e7eb;font-weight:bold;font-size:16px;padding:12px;}
+.tab-btn.active{background:#2563eb;color:white;}
+.tab-content{display:none;}
+.tab-content.active{display:block;}
 .add-btn{background:#2563eb;color:white;}
 .remove-btn{background:#ef4444;color:white;}
 .clear-btn{background:#555;color:white;}
@@ -33,27 +38,48 @@ button{cursor:pointer;border:none;border-radius:6px;padding:7px 10px;margin:4px;
 
 <h1>더월드 알피지 조합 도우미</h1>
 
-<input id="search" placeholder="아이템 이름을 입력하세요...">
+<div class="tab-wrap">
+    <button class="tab-btn active" onclick="showTab('itemTab')">아이템 정보</button>
+    <button class="tab-btn" onclick="showTab('farmTab')">파밍 가이드</button>
+</div>
 
 <div id="status" class="small">데이터 불러오는 중...</div>
 
-<div class="planner">
-    <h2>목표 아이템 목록</h2>
-    <div id="targetList" class="small">아직 추가된 목표 아이템이 없습니다.</div>
-    <button class="clear-btn" onclick="clearTargets()">목록 전체 삭제</button>
-
-    <div class="section">
-        <h2>전체 필요 재료</h2>
-        <div id="totalMaterials" class="small">목표 아이템을 추가하면 여기에 총합이 표시됩니다.</div>
-    </div>
+<div id="itemTab" class="tab-content active">
+    <input id="search" placeholder="아이템 이름을 입력하세요...">
+    <div id="results"></div>
 </div>
 
-<div id="results"></div>
+<div id="farmTab" class="tab-content">
+    <div class="planner">
+        <h2>목표 아이템 목록</h2>
+        <div id="targetList" class="small">아직 추가된 목표 아이템이 없습니다.</div>
+        <button class="clear-btn" onclick="clearTargets()">목록 전체 삭제</button>
+
+        <div class="section">
+            <h2>전체 필요 재료</h2>
+            <div id="totalMaterials" class="small">목표 아이템을 추가하면 여기에 총합이 표시됩니다.</div>
+        </div>
+    </div>
+</div>
 
 <script>
 let items = [];
 let nameMap = {};
 let targets = [];
+
+function showTab(tabId){
+    document.querySelectorAll(".tab-content").forEach(tab => tab.classList.remove("active"));
+    document.querySelectorAll(".tab-btn").forEach(btn => btn.classList.remove("active"));
+
+    document.getElementById(tabId).classList.add("active");
+
+    if(tabId === "itemTab"){
+        document.querySelectorAll(".tab-btn")[0].classList.add("active");
+    }else{
+        document.querySelectorAll(".tab-btn")[1].classList.add("active");
+    }
+}
 
 function displayName(name){
     const found = nameMap[name];
@@ -65,6 +91,7 @@ function safeText(text){
 }
 
 function searchByName(name){
+    showTab("itemTab");
     document.getElementById("search").value = displayName(name);
     render(displayName(name));
 }
@@ -75,17 +102,13 @@ function hasDropInfo(item){
 
 function isCraftItem(item){
     if(!item) return false;
-
-    // 드랍 정보가 있으면 recipe가 있어도 드랍 아이템으로 취급
     if(hasDropInfo(item)) return false;
-
     return Array.isArray(item.recipe) && item.recipe.length > 0;
 }
 
 function isCoinName(name){
-    return String(name || "").toLowerCase().includes("coin") ||
-           String(name || "").includes("은화") ||
-           String(name || "").includes("금화");
+    const n = String(name || "").toLowerCase();
+    return n.startsWith("prius") && n.includes("coin");
 }
 
 function shopRecipeText(item){
@@ -93,7 +116,7 @@ function shopRecipeText(item){
 
     const shopMaterials = item.recipe.filter(obj => {
         const materialName = Object.keys(obj)[0];
-        return isCoinName(materialName) || isCoinName(displayName(materialName));
+        return isCoinName(materialName);
     });
 
     if(shopMaterials.length === 0) return "";
@@ -113,9 +136,7 @@ function itemKindBadge(item){
 }
 
 function shopBadge(item){
-    const text = shopRecipeText(item);
-    if(!text) return "";
-    return `<span class="kind shop">구매 가능</span>`;
+    return shopRecipeText(item) ? `<span class="kind shop">구매 가능</span>` : "";
 }
 
 function droppedByText(item){
@@ -173,6 +194,7 @@ function addTarget(itemName){
     if(!targets.includes(itemName)){
         targets.push(itemName);
         updatePlanner();
+        showTab("farmTab");
     }
 }
 
@@ -232,8 +254,7 @@ function updatePlanner(){
         const count = totals[name];
 
         if(material && !isCraftItem(material)){
-            const monsters =
-                hasDropInfo(material)
+            const monsters = hasDropInfo(material)
                 ? material.dropped_by
                 : ["드랍 몬스터 정보 없음"];
 
@@ -243,21 +264,13 @@ function updatePlanner(){
                 monsterGroups[monsterKey] = [];
             }
 
-            monsterGroups[monsterKey].push({
-                name,
-                count
-            });
+            monsterGroups[monsterKey].push({ name, count });
         }else{
-            craftItems.push({
-                name,
-                count
-            });
+            craftItems.push({ name, count });
         }
     });
 
-    let html = "";
-
-    html += `<h3>몬스터별 파밍 리스트</h3>`;
+    let html = `<h3>몬스터별 파밍 리스트</h3>`;
 
     const monsterNames = Object.keys(monsterGroups);
 
@@ -368,17 +381,9 @@ function render(keyword){
             <p><strong>등급:</strong> ${item.rank || "-"}</p>
             <p><strong>설명:</strong> ${item.description || "-"}</p>
 
-            ${
-                !isCraftItem(item)
-                ? `<p><strong>드랍 몬스터:</strong> ${droppedByText(item)}</p>`
-                : ""
-            }
+            ${!isCraftItem(item) ? `<p><strong>드랍 몬스터:</strong> ${droppedByText(item)}</p>` : ""}
 
-            ${
-                buyText
-                ? `<p><strong>구매 가능:</strong> ${buyText}</p>`
-                : ""
-            }
+            ${buyText ? `<p><strong>구매 가능:</strong> ${buyText}</p>` : ""}
 
             <div class="section">
                 <h3>이 아이템의 재료</h3>
