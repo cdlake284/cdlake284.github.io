@@ -25,6 +25,7 @@ button{cursor:pointer;border:none;border-radius:6px;padding:7px 10px;margin:4px;
 .kind{display:inline-block;padding:3px 8px;border-radius:999px;font-size:12px;font-weight:bold;margin-left:6px;}
 .craft{background:#e0f2fe;color:#0369a1;}
 .dropitem{background:#fef3c7;color:#92400e;}
+.shop{background:#dcfce7;color:#166534;}
 </style>
 </head>
 
@@ -68,8 +69,40 @@ function searchByName(name){
     render(displayName(name));
 }
 
+function hasDropInfo(item){
+    return item && Array.isArray(item.dropped_by) && item.dropped_by.length > 0;
+}
+
 function isCraftItem(item){
-    return item && Array.isArray(item.recipe) && item.recipe.length > 0;
+    if(!item) return false;
+
+    // 드랍 정보가 있으면 recipe가 있어도 드랍 아이템으로 취급
+    if(hasDropInfo(item)) return false;
+
+    return Array.isArray(item.recipe) && item.recipe.length > 0;
+}
+
+function isCoinName(name){
+    return String(name || "").toLowerCase().includes("coin") ||
+           String(name || "").includes("은화") ||
+           String(name || "").includes("금화");
+}
+
+function shopRecipeText(item){
+    if(!item || !Array.isArray(item.recipe)) return "";
+
+    const shopMaterials = item.recipe.filter(obj => {
+        const materialName = Object.keys(obj)[0];
+        return isCoinName(materialName) || isCoinName(displayName(materialName));
+    });
+
+    if(shopMaterials.length === 0) return "";
+
+    return shopMaterials.map(obj => {
+        const materialName = Object.keys(obj)[0];
+        const count = obj[materialName];
+        return `${displayName(materialName)} x${count}`;
+    }).join(", ");
 }
 
 function itemKindBadge(item){
@@ -77,6 +110,12 @@ function itemKindBadge(item){
         return `<span class="kind craft">조합 아이템</span>`;
     }
     return `<span class="kind dropitem">드랍 아이템</span>`;
+}
+
+function shopBadge(item){
+    const text = shopRecipeText(item);
+    if(!text) return "";
+    return `<span class="kind shop">구매 가능</span>`;
 }
 
 function droppedByText(item){
@@ -94,12 +133,15 @@ function materialDropInfo(materialName){
     }
 
     if(isCraftItem(material)){
-        return "<div class='material-drop'>조합으로 획득</div>";
+        return "<div class='material-drop'>획득 방식: 조합</div>";
     }
+
+    const buyText = shopRecipeText(material);
 
     return `
         <div class="material-drop">
             <strong>드랍 몬스터:</strong> ${droppedByText(material)}
+            ${buyText ? `<br><strong>구매 가능:</strong> ${buyText}` : ""}
         </div>
     `;
 }
@@ -112,12 +154,14 @@ function recipeHtml(recipe){
     return recipe.map(obj => {
         const materialName = Object.keys(obj)[0];
         const count = obj[materialName];
+        const material = nameMap[materialName];
 
         return `
             <div class="material-card">
                 <div class="material-title" onclick="searchByName('${safeText(materialName)}')">
                     ${displayName(materialName)} x${count}
-                    ${itemKindBadge(nameMap[materialName])}
+                    ${itemKindBadge(material)}
+                    ${shopBadge(material)}
                 </div>
                 ${materialDropInfo(materialName)}
             </div>
@@ -189,19 +233,19 @@ function updatePlanner(){
 
         if(material && !isCraftItem(material)){
             const monsters =
-                Array.isArray(material.dropped_by) && material.dropped_by.length > 0
+                hasDropInfo(material)
                 ? material.dropped_by
                 : ["드랍 몬스터 정보 없음"];
 
-            monsters.forEach(monster => {
-                if(!monsterGroups[monster]){
-                    monsterGroups[monster] = [];
-                }
+            const monsterKey = monsters.join(", ");
 
-                monsterGroups[monster].push({
-                    name,
-                    count
-                });
+            if(!monsterGroups[monsterKey]){
+                monsterGroups[monsterKey] = [];
+            }
+
+            monsterGroups[monsterKey].push({
+                name,
+                count
             });
         }else{
             craftItems.push({
@@ -224,12 +268,19 @@ function updatePlanner(){
             <div class="total-card">
                 <div class="total-title">${monster}</div>
                 <div class="small">
-                    ${monsterGroups[monster].map(entry => `
-                        <div onclick="searchByName('${safeText(entry.name)}')" style="cursor:pointer; margin-top:4px;">
-                            ${displayName(entry.name)} x${entry.count}
-                            ${itemKindBadge(nameMap[entry.name])}
-                        </div>
-                    `).join("")}
+                    ${monsterGroups[monster].map(entry => {
+                        const material = nameMap[entry.name];
+                        const buyText = shopRecipeText(material);
+
+                        return `
+                            <div onclick="searchByName('${safeText(entry.name)}')" style="cursor:pointer; margin-top:6px;">
+                                ${displayName(entry.name)} x${entry.count}
+                                ${itemKindBadge(material)}
+                                ${shopBadge(material)}
+                                ${buyText ? `<br><span class="small">구매 가능: ${buyText}</span>` : ""}
+                            </div>
+                        `;
+                    }).join("")}
                 </div>
             </div>
         `).join("");
@@ -298,12 +349,14 @@ function render(keyword){
 
     box.innerHTML = results.map(item => {
         const usedFor = item.required_by || [];
+        const buyText = shopRecipeText(item);
 
         return `
         <div class="item">
             <h2>
                 ${item.koreanname || item.name}
                 ${itemKindBadge(item)}
+                ${shopBadge(item)}
             </h2>
 
             <button class="add-btn" onclick="addTarget('${safeText(item.name)}')">
@@ -318,6 +371,12 @@ function render(keyword){
             ${
                 !isCraftItem(item)
                 ? `<p><strong>드랍 몬스터:</strong> ${droppedByText(item)}</p>`
+                : ""
+            }
+
+            ${
+                buyText
+                ? `<p><strong>구매 가능:</strong> ${buyText}</p>`
                 : ""
             }
 
