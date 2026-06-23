@@ -8,7 +8,7 @@
 <style>
 body{
     font-family: Arial, sans-serif;
-    max-width: 1000px;
+    max-width:1000px;
     margin:auto;
     padding:20px;
     background:#f5f5f5;
@@ -25,7 +25,7 @@ input{
     background:white;
     border:1px solid #ddd;
     border-radius:10px;
-    padding:15px;
+    padding:18px;
     margin-top:12px;
 }
 .badge{
@@ -37,8 +37,19 @@ input{
     cursor:pointer;
 }
 .badge:hover{background:#dcdcdc;}
+.section{
+    margin-top:16px;
+    padding-top:12px;
+    border-top:1px solid #ddd;
+}
 .small{color:#666;font-size:14px;}
-hr{border:none;border-top:1px solid #ddd;margin:16px 0;}
+.drop{
+    background:#fff7e6;
+    border:1px solid #ffd591;
+    padding:10px;
+    border-radius:8px;
+    margin-top:8px;
+}
 </style>
 </head>
 
@@ -60,6 +71,10 @@ function displayName(name){
     return found ? (found.koreanname || found.name) : name;
 }
 
+function safeText(text){
+    return String(text ?? "").replace(/'/g, "\\'");
+}
+
 function searchByName(name){
     document.getElementById("search").value = displayName(name);
     render(displayName(name));
@@ -75,11 +90,44 @@ function recipeHtml(recipe){
         const count = obj[materialName];
 
         return `
-            <span class="badge" onclick="searchByName('${materialName.replace(/'/g,"\\'")}')">
+            <span class="badge" onclick="searchByName('${safeText(materialName)}')">
                 ${displayName(materialName)} x${count}
             </span>
         `;
     }).join("");
+}
+
+function notesHtml(notes){
+    if(!Array.isArray(notes) || notes.length === 0){
+        return "-";
+    }
+
+    return notes.map(note => {
+        return String(note).replace("Where to obtain:", "획득처:");
+    }).join("<br>");
+}
+
+function droppedByHtml(item){
+    const droppedBy = item.dropped_by || [];
+    const rate = item.droprate;
+
+    if(!Array.isArray(droppedBy) || droppedBy.length === 0){
+        return "<p class='small'>드랍 몬스터 정보가 없습니다.</p>";
+    }
+
+    const rateText =
+        typeof rate === "number"
+        ? Math.round(rate * 10000) / 100 + "%"
+        : "-";
+
+    return `
+        <div class="drop">
+            <strong>드랍 몬스터:</strong><br>
+            ${droppedBy.map(monster => `• ${monster}`).join("<br>")}
+            <br><br>
+            <strong>드랍률:</strong> ${rateText}
+        </div>
+    `;
 }
 
 fetch("Module_Item_data.json")
@@ -128,7 +176,6 @@ function render(keyword){
 
     box.innerHTML = results.map(item => {
         const usedFor = item.required_by || [];
-        const notes = Array.isArray(item.notes) ? item.notes.join("<br>") : "-";
 
         return `
         <div class="item">
@@ -139,23 +186,29 @@ function render(keyword){
             <p><strong>등급:</strong> ${item.rank || "-"}</p>
             <p><strong>설명:</strong> ${item.description || "-"}</p>
 
-            <p><strong>획득 정보:</strong><br>${notes}</p>
+            <div class="section">
+                <h3>획득 정보</h3>
+                <p>${notesHtml(item.notes)}</p>
+                ${droppedByHtml(item)}
+            </div>
 
-            <hr>
+            <div class="section">
+                <h3>이 아이템의 재료</h3>
+                ${recipeHtml(item.recipe)}
+            </div>
 
-            <h3>이 아이템의 재료</h3>
-            ${recipeHtml(item.recipe)}
-
-            <h3>이 아이템이 사용되는 조합</h3>
-            ${
-                usedFor.length
-                ? usedFor.map(name =>
-                    `<span class="badge" onclick="searchByName('${name.replace(/'/g,"\\'")}')">
-                        ${displayName(name)}
-                    </span>`
-                  ).join("")
-                : "<p class='small'>사용처 정보가 없습니다.</p>"
-            }
+            <div class="section">
+                <h3>이 아이템이 사용되는 조합</h3>
+                ${
+                    usedFor.length
+                    ? usedFor.map(name =>
+                        `<span class="badge" onclick="searchByName('${safeText(name)}')">
+                            ${displayName(name)}
+                        </span>`
+                      ).join("")
+                    : "<p class='small'>사용처 정보가 없습니다.</p>"
+                }
+            </div>
         </div>
         `;
     }).join("");
