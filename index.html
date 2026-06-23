@@ -619,6 +619,10 @@ function getPlannerData(){
         if(!item) return;
 
         if(isCraftItem(item)){
+            if(isCraftOwned(targetName, 1)){
+                return;
+            }
+
             if(Array.isArray(item.recipe)){
                 item.recipe.forEach(obj => {
                     const materialName = Object.keys(obj)[0];
@@ -634,34 +638,14 @@ function getPlannerData(){
     return {directTotals, craftTotals};
 }
 
-function isCraftCompleteByMaterials(craftName, needCount){
-    if(isCraftOwned(craftName, needCount)) return true;
-
-    const item = nameMap[craftName];
-    if(!item || !Array.isArray(item.recipe)) return false;
-
-    const requiredLeaves = {};
-    collectLeafMaterials(craftName, needCount, requiredLeaves);
-
-    return Object.keys(requiredLeaves).every(name => {
-        return (inventory[name] || 0) >= requiredLeaves[name];
-    });
-}
-
-function isMaterialComplete(materialName, needCount){
-    const material = nameMap[materialName];
-
-    if(isCraftItem(material)){
-        return isCraftCompleteByMaterials(materialName, needCount);
-    }
-
-    return (inventory[materialName] || 0) >= needCount;
-}
-
 function isTargetComplete(targetName){
     const item = nameMap[targetName];
 
     if(!item) return false;
+
+    if(isCraftItem(item) && isCraftOwned(targetName, 1)){
+        return true;
+    }
 
     if(!isCraftItem(item)){
         return (inventory[item.name] || 0) >= 1;
