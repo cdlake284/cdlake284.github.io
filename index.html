@@ -24,6 +24,7 @@ button{cursor:pointer;border:none;border-radius:6px;padding:7px 10px;margin:4px;
 .section{margin-top:16px;padding-top:12px;border-top:1px solid #ddd;}
 .small{color:#666;font-size:14px;}
 .material-card,.total-card{background:#f8f8f8;border:1px solid #ddd;border-radius:8px;padding:10px;margin:8px 0;}
+.done-card{background:#ecfdf5;border-color:#86efac;}
 .material-title,.total-title{font-weight:bold;cursor:pointer;}
 .material-title:hover,.total-title:hover{text-decoration:underline;}
 .material-drop{margin-top:6px;color:#444;font-size:14px;}
@@ -31,40 +32,23 @@ button{cursor:pointer;border:none;border-radius:6px;padding:7px 10px;margin:4px;
 .craft{background:#e0f2fe;color:#0369a1;}
 .dropitem{background:#fef3c7;color:#92400e;}
 .shop{background:#dcfce7;color:#166534;}
+.done{background:#bbf7d0;color:#166534;}
 
-.target-row{
-    display:flex;
-    flex-wrap:wrap;
-    gap:6px;
-    align-items:center;
-}
+.target-row{display:flex;flex-wrap:wrap;gap:6px;align-items:center;}
+.target-chip{display:inline-flex;align-items:center;gap:6px;background:#eef2ff;border:1px solid #c7d2fe;border-radius:999px;padding:6px 10px;margin:3px;}
+.target-chip span{cursor:pointer;}
+.target-chip button{background:#ef4444;color:white;padding:2px 6px;margin:0;font-size:12px;}
+.mini-planner{margin-bottom:12px;}
 
-.target-chip{
-    display:inline-flex;
-    align-items:center;
-    gap:6px;
-    background:#eef2ff;
-    border:1px solid #c7d2fe;
-    border-radius:999px;
-    padding:6px 10px;
-    margin:3px;
-}
-
-.target-chip span{
-    cursor:pointer;
-}
-
-.target-chip button{
-    background:#ef4444;
-    color:white;
-    padding:2px 6px;
-    margin:0;
-    font-size:12px;
-}
-
-.mini-planner{
-    margin-bottom:12px;
-}
+.search-box h3{margin-top:0;}
+.qty-box{display:flex;align-items:center;gap:8px;margin-top:8px;flex-wrap:wrap;}
+.qty-btn{background:#e5e7eb;font-weight:bold;padding:4px 9px;}
+.qty-num{font-weight:bold;min-width:20px;text-align:center;}
+.remain{font-weight:bold;}
+.remain.need{color:#dc2626;}
+.remain.done-text{color:#16a34a;}
+.progress-wrap{background:#e5e7eb;border-radius:999px;height:14px;margin:8px 0 16px 0;overflow:hidden;}
+.progress-bar{height:100%;background:#22c55e;width:0%;}
 </style>
 </head>
 
@@ -80,12 +64,17 @@ button{cursor:pointer;border:none;border-radius:6px;padding:7px 10px;margin:4px;
 <div id="status" class="small">데이터 불러오는 중...</div>
 
 <div id="itemTab" class="tab-content active">
+
+    <div class="planner search-box">
+        <h3>아이템 검색</h3>
+        <input id="search" placeholder="아이템 이름 입력... 예: 화신의 눈, 스캐럽 본">
+    </div>
+
     <div class="planner mini-planner">
         <h3>현재 목표 아이템</h3>
         <div id="targetListMini" class="target-row small">아직 추가된 목표 아이템이 없습니다.</div>
     </div>
 
-    <input id="search" placeholder="아이템 이름을 입력하세요...">
     <div id="results"></div>
 </div>
 
@@ -97,6 +86,7 @@ button{cursor:pointer;border:none;border-radius:6px;padding:7px 10px;margin:4px;
 
         <div class="section">
             <h2>전체 필요 재료</h2>
+            <div id="progressArea"></div>
             <div id="totalMaterials" class="small">목표 아이템을 추가하면 여기에 총합이 표시됩니다.</div>
         </div>
     </div>
@@ -105,7 +95,16 @@ button{cursor:pointer;border:none;border-radius:6px;padding:7px 10px;margin:4px;
 <script>
 let items = [];
 let nameMap = {};
-let targets = [];
+let targets = JSON.parse(localStorage.getItem("targets") || "[]");
+let inventory = JSON.parse(localStorage.getItem("inventory") || "{}");
+
+function saveTargets(){
+    localStorage.setItem("targets", JSON.stringify(targets));
+}
+
+function saveInventory(){
+    localStorage.setItem("inventory", JSON.stringify(inventory));
+}
 
 function showTab(tabId){
     document.querySelectorAll(".tab-content").forEach(tab => tab.classList.remove("active"));
@@ -178,6 +177,10 @@ function shopBadge(item){
     return shopRecipeText(item) ? `<span class="kind shop">구매 가능</span>` : "";
 }
 
+function doneBadge(){
+    return `<span class="kind done">완료</span>`;
+}
+
 function droppedByText(item){
     if(!item || !Array.isArray(item.dropped_by) || item.dropped_by.length === 0){
         return "-";
@@ -232,22 +235,37 @@ function recipeHtml(recipe){
 function addTarget(itemName){
     if(!targets.includes(itemName)){
         targets.push(itemName);
+        saveTargets();
         updatePlanner();
     }
 }
 
 function removeTarget(itemName){
     targets = targets.filter(name => name !== itemName);
+    saveTargets();
     updatePlanner();
 }
 
 function clearTargets(){
     targets = [];
+    saveTargets();
     updatePlanner();
 }
 
 function addTotal(totals, name, count){
     totals[name] = (totals[name] || 0) + count;
+}
+
+function addOwned(name){
+    inventory[name] = (inventory[name] || 0) + 1;
+    saveInventory();
+    updatePlanner();
+}
+
+function removeOwned(name){
+    inventory[name] = Math.max((inventory[name] || 0) - 1, 0);
+    saveInventory();
+    updatePlanner();
 }
 
 function targetChipsHtml(){
@@ -265,24 +283,7 @@ function targetChipsHtml(){
     `).join("");
 }
 
-function updatePlanner(){
-    const targetBox = document.getElementById("targetList");
-    const miniTargetBox = document.getElementById("targetListMini");
-    const totalBox = document.getElementById("totalMaterials");
-
-    if(targetBox){
-        targetBox.innerHTML = targetChipsHtml();
-    }
-
-    if(miniTargetBox){
-        miniTargetBox.innerHTML = targetChipsHtml();
-    }
-
-    if(targets.length === 0){
-        totalBox.innerHTML = "목표 아이템을 추가하면 여기에 총합이 표시됩니다.";
-        return;
-    }
-
+function getTotals(){
     const totals = {};
 
     targets.forEach(targetName => {
@@ -299,6 +300,74 @@ function updatePlanner(){
             addTotal(totals, item.name, 1);
         }
     });
+
+    return totals;
+}
+
+function progressHtml(totals){
+    const names = Object.keys(totals);
+    if(names.length === 0) return "";
+
+    let needTotal = 0;
+    let ownedTotal = 0;
+
+    names.forEach(name => {
+        needTotal += totals[name];
+        ownedTotal += Math.min(inventory[name] || 0, totals[name]);
+    });
+
+    const percent = needTotal > 0 ? Math.round((ownedTotal / needTotal) * 100) : 0;
+
+    return `
+        <div class="small"><strong>전체 진행도:</strong> ${ownedTotal} / ${needTotal} (${percent}%)</div>
+        <div class="progress-wrap">
+            <div class="progress-bar" style="width:${percent}%"></div>
+        </div>
+    `;
+}
+
+function ownedControlHtml(name, needCount){
+    const owned = inventory[name] || 0;
+    const remain = Math.max(needCount - owned, 0);
+    const done = remain === 0;
+
+    return `
+        <div class="qty-box">
+            <span>필요 ${needCount}</span>
+            <span>보유</span>
+            <button class="qty-btn" onclick="removeOwned('${safeText(name)}')">-</button>
+            <span class="qty-num">${owned}</span>
+            <button class="qty-btn" onclick="addOwned('${safeText(name)}')">+</button>
+            <span class="remain ${done ? "done-text" : "need"}">
+                ${done ? "완료" : "남은 " + remain}
+            </span>
+        </div>
+    `;
+}
+
+function updatePlanner(){
+    const targetBox = document.getElementById("targetList");
+    const miniTargetBox = document.getElementById("targetListMini");
+    const totalBox = document.getElementById("totalMaterials");
+    const progressArea = document.getElementById("progressArea");
+
+    if(targetBox){
+        targetBox.innerHTML = targetChipsHtml();
+    }
+
+    if(miniTargetBox){
+        miniTargetBox.innerHTML = targetChipsHtml();
+    }
+
+    if(targets.length === 0){
+        totalBox.innerHTML = "목표 아이템을 추가하면 여기에 총합이 표시됩니다.";
+        progressArea.innerHTML = "";
+        return;
+    }
+
+    const totals = getTotals();
+
+    progressArea.innerHTML = progressHtml(totals);
 
     const monsterGroups = {};
     const craftItems = [];
@@ -338,13 +407,19 @@ function updatePlanner(){
                     ${monsterGroups[monster].map(entry => {
                         const material = nameMap[entry.name];
                         const buyText = shopRecipeText(material);
+                        const owned = inventory[entry.name] || 0;
+                        const remain = Math.max(entry.count - owned, 0);
 
                         return `
-                            <div onclick="searchByName('${safeText(entry.name)}')" style="cursor:pointer; margin-top:6px;">
-                                ${displayName(entry.name)} x${entry.count}
-                                ${itemKindBadge(material)}
-                                ${shopBadge(material)}
-                                ${buyText ? `<br><span class="small">구매 가능: ${buyText}</span>` : ""}
+                            <div class="${remain === 0 ? "done-card" : ""}" style="padding:8px;border-radius:8px;margin-top:6px;">
+                                <div onclick="searchByName('${safeText(entry.name)}')" style="cursor:pointer;">
+                                    <strong>${displayName(entry.name)} x${entry.count}</strong>
+                                    ${itemKindBadge(material)}
+                                    ${shopBadge(material)}
+                                    ${remain === 0 ? doneBadge() : ""}
+                                </div>
+                                ${buyText ? `<div class="small">구매 가능: ${buyText}</div>` : ""}
+                                ${ownedControlHtml(entry.name, entry.count)}
                             </div>
                         `;
                     }).join("")}
@@ -356,15 +431,22 @@ function updatePlanner(){
     if(craftItems.length > 0){
         html += `<h3>조합 필요 아이템</h3>`;
 
-        html += craftItems.map(entry => `
-            <div class="total-card">
-                <div class="total-title" onclick="searchByName('${safeText(entry.name)}')">
-                    ${displayName(entry.name)} x${entry.count}
-                    ${itemKindBadge(nameMap[entry.name])}
+        html += craftItems.map(entry => {
+            const owned = inventory[entry.name] || 0;
+            const remain = Math.max(entry.count - owned, 0);
+
+            return `
+                <div class="total-card ${remain === 0 ? "done-card" : ""}">
+                    <div class="total-title" onclick="searchByName('${safeText(entry.name)}')">
+                        ${displayName(entry.name)} x${entry.count}
+                        ${itemKindBadge(nameMap[entry.name])}
+                        ${remain === 0 ? doneBadge() : ""}
+                    </div>
+                    <div class="small">획득 방식: 조합</div>
+                    ${ownedControlHtml(entry.name, entry.count)}
                 </div>
-                <div class="small">획득 방식: 조합</div>
-            </div>
-        `).join("");
+            `;
+        }).join("");
     }
 
     totalBox.innerHTML = html;
