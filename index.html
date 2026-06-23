@@ -47,6 +47,36 @@ button{cursor:pointer;border:none;border-radius:6px;padding:7px 10px;margin:4px;
 .done{background:#bbf7d0;color:#166534;}
 .missing{background:#fee2e2;color:#b91c1c;}
 
+.item-icon{
+    width:32px;
+    height:32px;
+    object-fit:cover;
+    border-radius:4px;
+    border:1px solid #555;
+    margin-right:8px;
+    vertical-align:middle;
+    flex-shrink:0;
+    background:#111;
+}
+
+.item-icon-small{
+    width:26px;
+    height:26px;
+    object-fit:cover;
+    border-radius:4px;
+    border:1px solid #555;
+    margin-right:6px;
+    vertical-align:middle;
+    flex-shrink:0;
+    background:#111;
+}
+
+.title-with-icon{
+    display:inline-flex;
+    align-items:center;
+    gap:4px;
+}
+
 .owned-toggle{background:#e5e7eb;color:#374151;font-weight:bold;}
 .owned-toggle.active{background:#22c55e;color:white;}
 
@@ -144,7 +174,8 @@ button{cursor:pointer;border:none;border-radius:6px;padding:7px 10px;margin:4px;
 }
 
 .simple-material{
-    display:inline-block;
+    display:inline-flex;
+    align-items:center;
     background:#f1f5f9;
     border:1px solid #e2e8f0;
     border-radius:999px;
@@ -370,6 +401,22 @@ function displayMonsterName(name){
     return monsterNameMap[name] || name;
 }
 
+function getItemIcon(itemName){
+    if(!itemName) return "";
+    return `images/items/${itemName.replaceAll(" ", "_")}.jpg`;
+}
+
+function itemIcon(itemName, small=false){
+    if(!itemName) return "";
+    return `
+        <img
+            class="${small ? "item-icon-small" : "item-icon"}"
+            src="${getItemIcon(itemName)}"
+            onerror="this.style.display='none'"
+        >
+    `;
+}
+
 function safeText(text){
     return String(text ?? "").replace(/\\/g, "\\\\").replace(/'/g, "\\'");
 }
@@ -456,7 +503,10 @@ function recipeHtml(recipe){
         return `
             <div class="material-card">
                 <div class="material-title" onclick="searchByName('${safeText(materialName)}')">
-                    ${displayName(materialName)} x${count}
+                    <span class="title-with-icon">
+                        ${itemIcon(materialName, true)}
+                        ${displayName(materialName)} x${count}
+                    </span>
                     ${itemKindBadge(material)}
                     ${shopBadge(material)}
                 </div>
@@ -526,6 +576,7 @@ function targetChipsHtml(){
 
     return targets.map(name => `
         <div class="target-chip">
+            ${itemIcon(name, true)}
             <span onclick="searchByName('${safeText(name)}')">${displayName(name)}</span>
             <button onclick="removeTarget('${safeText(name)}')">X</button>
         </div>
@@ -692,6 +743,7 @@ function craftSimpleMaterialsHtml(craftName, needCount){
                 const count = obj[materialName] * needCount;
                 return `
                     <span class="simple-material" onclick="searchByName('${safeText(materialName)}')">
+                        ${itemIcon(materialName, true)}
                         ${displayName(materialName)} x${count}
                     </span>
                 `;
@@ -748,7 +800,10 @@ function craftMaterialsHtml(craftTotals){
                     <div class="row-card">
                         <div class="item-main">
                             <span class="craft-title" onclick="searchByName('${safeText(name)}')">
-                                ${displayName(name)} x${needCount}
+                                <span class="title-with-icon">
+                                    ${itemIcon(name)}
+                                    ${displayName(name)} x${needCount}
+                                </span>
                             </span>
                             ${itemKindBadge(item)}
                             ${done ? doneBadge() : ""}
@@ -807,7 +862,10 @@ function directMaterialsHtml(directTotals){
                                 <div class="row-card">
                                     <div class="item-main">
                                         <span class="total-title" onclick="searchByName('${safeText(entry.name)}')">
-                                            ${displayName(entry.name)} x${entry.count}
+                                            <span class="title-with-icon">
+                                                ${itemIcon(entry.name)}
+                                                ${displayName(entry.name)} x${entry.count}
+                                            </span>
                                         </span>
                                         ${itemKindBadge(material)}
                                         ${shopBadge(material)}
@@ -864,7 +922,10 @@ function targetDetailsHtml(){
                             <div class="detail-material ${done ? "done-card" : ""}">
                                 <div>
                                     <span class="detail-material-name" onclick="searchByName('${safeText(materialName)}')">
-                                        ${displayName(materialName)} x${count}
+                                        <span class="title-with-icon">
+                                            ${itemIcon(materialName, true)}
+                                            ${displayName(materialName)} x${count}
+                                        </span>
                                     </span>
                                     ${itemKindBadge(material)}
                                     ${shopBadge(material)}
@@ -883,7 +944,10 @@ function targetDetailsHtml(){
                     <div class="detail-material ${owned >= 1 ? "done-card" : ""}">
                         <div>
                             <span class="detail-material-name" onclick="searchByName('${safeText(item.name)}')">
-                                ${displayName(item.name)} x1
+                                <span class="title-with-icon">
+                                    ${itemIcon(item.name, true)}
+                                    ${displayName(item.name)} x1
+                                </span>
                             </span>
                             ${itemKindBadge(item)}
                             ${shopBadge(item)}
@@ -899,7 +963,10 @@ function targetDetailsHtml(){
             <div class="target-detail-card ${targetDone ? "done-card" : ""}">
                 <div>
                     <span class="target-detail-title" onclick="searchByName('${safeText(targetName)}')">
-                        ${displayName(targetName)}
+                        <span class="title-with-icon">
+                            ${itemIcon(targetName)}
+                            ${displayName(targetName)}
+                        </span>
                     </span>
                     ${itemKindBadge(item)}
                     ${targetDone ? doneBadge() : missingBadge()}
@@ -991,7 +1058,10 @@ function render(keyword){
         return `
         <div class="item">
             <h2>
-                ${item.koreanname || item.name}
+                <span class="title-with-icon">
+                    ${itemIcon(item.name)}
+                    ${item.koreanname || item.name}
+                </span>
                 ${itemKindBadge(item)}
                 ${shopBadge(item)}
             </h2>
