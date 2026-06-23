@@ -6,88 +6,23 @@
 <title>더월드 알피지 조합 도우미</title>
 
 <style>
-body{
-    font-family: Arial, sans-serif;
-    max-width:1000px;
-    margin:auto;
-    padding:20px;
-    background:#f5f5f5;
-}
+body{font-family:Arial,sans-serif;max-width:1000px;margin:auto;padding:20px;background:#f5f5f5;}
 h1{text-align:center;}
-input{
-    width:100%;
-    padding:12px;
-    font-size:18px;
-    border:1px solid #ccc;
-    border-radius:8px;
-}
-button{
-    cursor:pointer;
-    border:none;
-    border-radius:6px;
-    padding:7px 10px;
-    margin:4px;
-}
+input{width:100%;padding:12px;font-size:18px;border:1px solid #ccc;border-radius:8px;}
+button{cursor:pointer;border:none;border-radius:6px;padding:7px 10px;margin:4px;}
 .add-btn{background:#2563eb;color:white;}
 .remove-btn{background:#ef4444;color:white;}
 .clear-btn{background:#555;color:white;}
-.item,.planner{
-    background:white;
-    border:1px solid #ddd;
-    border-radius:10px;
-    padding:18px;
-    margin-top:12px;
-}
-.badge{
-    display:inline-block;
-    background:#eee;
-    padding:6px 10px;
-    margin:4px;
-    border-radius:6px;
-    cursor:pointer;
-}
+.item,.planner{background:white;border:1px solid #ddd;border-radius:10px;padding:18px;margin-top:12px;}
+.badge{display:inline-block;background:#eee;padding:6px 10px;margin:4px;border-radius:6px;cursor:pointer;}
 .badge:hover{background:#dcdcdc;}
-.section{
-    margin-top:16px;
-    padding-top:12px;
-    border-top:1px solid #ddd;
-}
+.section{margin-top:16px;padding-top:12px;border-top:1px solid #ddd;}
 .small{color:#666;font-size:14px;}
-.drop{
-    background:#fff7e6;
-    border:1px solid #ffd591;
-    padding:10px;
-    border-radius:8px;
-    margin-top:8px;
-}
-.material-card{
-    background:#f8f8f8;
-    border:1px solid #ddd;
-    border-radius:8px;
-    padding:10px;
-    margin:8px 0;
-}
-.material-title{
-    font-weight:bold;
-    cursor:pointer;
-}
-.material-title:hover{text-decoration:underline;}
-.material-drop{
-    margin-top:6px;
-    color:#444;
-    font-size:14px;
-}
-.total-card{
-    background:#f9fafb;
-    border:1px solid #ddd;
-    border-radius:8px;
-    padding:12px;
-    margin:8px 0;
-}
-.total-title{
-    font-weight:bold;
-    font-size:16px;
-}
+.drop{background:#fff7e6;border:1px solid #ffd591;padding:10px;border-radius:8px;margin-top:8px;}
+.material-card,.total-card{background:#f8f8f8;border:1px solid #ddd;border-radius:8px;padding:10px;margin:8px 0;}
+.material-title,.total-title{font-weight:bold;cursor:pointer;}
+.material-title:hover,.total-title:hover{text-decoration:underline;}
+.material-drop{margin-top:6px;color:#444;font-size:14px;}
 </style>
 </head>
 
@@ -132,26 +67,29 @@ function searchByName(name){
 }
 
 function notesHtml(notes){
-    if(!Array.isArray(notes) || notes.length === 0){
+    if(!Array.isArray(notes) || notes.length === 0) return "-";
+
+    return notes.map(note =>
+        String(note).replace("Where to obtain:", "획득처:")
+    ).join("<br>");
+}
+
+function droppedByText(item){
+    if(!item || !Array.isArray(item.dropped_by) || item.dropped_by.length === 0){
         return "-";
     }
-
-    return notes.map(note => {
-        return String(note).replace("Where to obtain:", "획득처:");
-    }).join("<br>");
+    return item.dropped_by.join(", ");
 }
 
 function droppedByHtml(item){
-    const droppedBy = item.dropped_by || [];
-
-    if(!Array.isArray(droppedBy) || droppedBy.length === 0){
+    if(!item || !Array.isArray(item.dropped_by) || item.dropped_by.length === 0){
         return "<p class='small'>드랍 몬스터 정보가 없습니다.</p>";
     }
 
     return `
         <div class="drop">
             <strong>드랍 몬스터:</strong><br>
-            ${droppedBy.map(monster => `• ${monster}`).join("<br>")}
+            ${item.dropped_by.map(monster => `• ${monster}`).join("<br>")}
         </div>
     `;
 }
@@ -163,25 +101,10 @@ function materialDropInfo(materialName){
         return "<div class='material-drop'>획득 정보 없음</div>";
     }
 
-    const droppedBy = material.dropped_by || [];
-    const notes = material.notes || [];
-
     let html = "<div class='material-drop'>";
 
-    if(Array.isArray(droppedBy) && droppedBy.length > 0){
-        html += `<strong>드랍 몬스터:</strong> ${droppedBy.join(", ")}<br>`;
-    }
-
-    if(Array.isArray(notes) && notes.length > 0){
-        html += `<strong>획득처:</strong> ${notesHtml(notes)}`;
-    }
-
-    if(
-        (!Array.isArray(droppedBy) || droppedBy.length === 0) &&
-        (!Array.isArray(notes) || notes.length === 0)
-    ){
-        html += "획득 정보 없음";
-    }
+    html += `<strong>획득처:</strong> ${notesHtml(material.notes)}<br>`;
+    html += `<strong>드랍 몬스터:</strong> ${droppedByText(material)}`;
 
     html += "</div>";
     return html;
@@ -224,6 +147,10 @@ function clearTargets(){
     updatePlanner();
 }
 
+function addTotal(totals, name, count){
+    totals[name] = (totals[name] || 0) + count;
+}
+
 function updatePlanner(){
     const targetBox = document.getElementById("targetList");
     const totalBox = document.getElementById("totalMaterials");
@@ -244,35 +171,19 @@ function updatePlanner(){
     const totals = {};
 
     targets.forEach(targetName => {
+        const item = nameMap[targetName];
+        if(!item) return;
 
-    const item = nameMap[targetName];
-
-    if(!item) return;
-
-    // 제작 아이템
-    if(Array.isArray(item.recipe) && item.recipe.length > 0){
-
-        item.recipe.forEach(obj => {
-
-            const materialName = Object.keys(obj)[0];
-            const count = obj[materialName];
-
-            totals[materialName] =
-                (totals[materialName] || 0) + count;
-
-        });
-
-    }
-
-    // 드랍 아이템
-    else{
-
-        totals[item.name] =
-            (totals[item.name] || 0) + 1;
-
-    }
-
-});
+        if(Array.isArray(item.recipe) && item.recipe.length > 0){
+            item.recipe.forEach(obj => {
+                const materialName = Object.keys(obj)[0];
+                const count = obj[materialName];
+                addTotal(totals, materialName, count);
+            });
+        }else{
+            addTotal(totals, item.name, 1);
+        }
+    });
 
     const materialNames = Object.keys(totals);
 
@@ -283,20 +194,15 @@ function updatePlanner(){
 
     totalBox.innerHTML = materialNames.map(name => {
         const material = nameMap[name];
-        const notes = material ? notesHtml(material.notes) : "-";
-        const droppedBy =
-            material && Array.isArray(material.dropped_by) && material.dropped_by.length > 0
-            ? material.dropped_by.join(", ")
-            : "-";
 
         return `
             <div class="total-card">
-                <div class="total-title" onclick="searchByName('${safeText(name)}')" style="cursor:pointer;">
+                <div class="total-title" onclick="searchByName('${safeText(name)}')">
                     ${displayName(name)} x${totals[name]}
                 </div>
                 <div class="small">
-                    <strong>획득처:</strong> ${notes}<br>
-                    <strong>드랍 몬스터:</strong> ${droppedBy}
+                    <strong>획득처:</strong> ${material ? notesHtml(material.notes) : "-"}<br>
+                    <strong>드랍 몬스터:</strong> ${droppedByText(material)}
                 </div>
             </div>
         `;
