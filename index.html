@@ -164,7 +164,7 @@ button{cursor:pointer;border:none;border-radius:6px;padding:7px 10px;margin:4px;
 <div id="farmTab" class="tab-content">
     <div class="farm-layout">
         <div class="side-panel">
-            <div class="panel-title">목표 아이템 상세</div>
+            <div class="panel-title">목표 아이템</div>
             <div id="targetList" class="target-row small">아직 추가된 목표 아이템이 없습니다.</div>
 
             <div style="margin-top:8px;">
@@ -182,12 +182,12 @@ button{cursor:pointer;border:none;border-radius:6px;padding:7px 10px;margin:4px;
 </div>
 
     <div class="planner">
-    <div class="panel-title">조합 필요 아이템</div>
+    <div class="panel-title">필요한 조합 아이템</div>
     <div id="craftMaterials"></div>
 </div>
             
     <div class="planner">
-    <div class="panel-title">직접 파밍 필요 재료</div>
+    <div class="panel-title">필요한 재료</div>
     <div id="totalMaterials"></div>
 </div>
 
@@ -910,7 +910,7 @@ function craftMaterialsHtml(craftTotals){
     const names = Object.keys(craftTotals);
 
     if(names.length === 0){
-        return "조합 필요 아이템이 없습니다.";
+        return "필요한 조합 아이템이 없습니다.";
     }
 
     return names.map(name => {
@@ -954,41 +954,33 @@ function directMaterialsHtml(directTotals){
         const count = directTotals[name];
 
         const monsters = hasDropInfo(material)
-            ? material.dropped_by.map(monster => {
-                return {
-                    original: monster,
-                    display: displayMonsterName(monster),
-                    difficulty: getMonsterDifficulty(displayMonsterName(monster))
-                };
-            })
-            : [{
-                original: "드랍 몬스터 정보 없음",
-                display: "드랍 몬스터 정보 없음",
-                difficulty: "난이도 미지정"
-            }];
+            ? material.dropped_by.map(monster => displayMonsterName(monster))
+            : ["드랍 몬스터 정보 없음"];
 
-        const difficultySet = [...new Set(monsters.map(m => m.difficulty))];
+        const monstersByDifficulty = {};
 
-        difficultySet.forEach(diff => {
+        monsters.forEach(monster => {
+            const difficulty = getMonsterDifficulty(monster);
+
+            if(!monstersByDifficulty[difficulty]){
+                monstersByDifficulty[difficulty] = [];
+            }
+
+            monstersByDifficulty[difficulty].push(monster);
+        });
+
+        Object.keys(monstersByDifficulty).forEach(diff => {
             if(!difficultyGroups[diff]){
                 difficultyGroups[diff] = {};
             }
 
-            if(!difficultyGroups[diff][name]){
-                difficultyGroups[diff][name] = {
-                    name,
-                    count,
-                    monsters: []
-                };
+            const monsterKey = monstersByDifficulty[diff].join(", ");
+
+            if(!difficultyGroups[diff][monsterKey]){
+                difficultyGroups[diff][monsterKey] = [];
             }
 
-            monsters
-                .filter(m => m.difficulty === diff)
-                .forEach(m => {
-                    if(!difficultyGroups[diff][name].monsters.includes(m.display)){
-                        difficultyGroups[diff][name].monsters.push(m.display);
-                    }
-                });
+            difficultyGroups[diff][monsterKey].push({name, count});
         });
     });
 
@@ -1001,11 +993,11 @@ function directMaterialsHtml(directTotals){
     });
 
     if(visibleDifficulty.length === 0){
-        return "직접 파밍 필요 재료가 없습니다.";
+        return "필요한 재료가 없습니다.";
     }
 
     return `
-        <h3>아이템별 파밍 리스트</h3>
+        <h3>몬스터별 파밍 리스트</h3>
 
         <div class="sort-control">
             <strong>난이도 정렬:</strong>
@@ -1016,9 +1008,9 @@ function directMaterialsHtml(directTotals){
         </div>
 
         ${visibleDifficulty.map(diff => {
-            const itemGroups = difficultyGroups[diff];
-            const itemNames = Object.keys(itemGroups).sort((a,b) => displayName(a).localeCompare(displayName(b), "ko"));
-            const itemCount = itemNames.length;
+            const monsterGroups = difficultyGroups[diff];
+            const monsterNames = Object.keys(monsterGroups).sort();
+            const itemCount = monsterNames.reduce((sum, monster) => sum + monsterGroups[monster].length, 0);
 
             return `
                 <div class="difficulty-section ${difficultyClassName(diff)}">
@@ -1027,41 +1019,41 @@ function directMaterialsHtml(directTotals){
                         <span class="difficulty-count">${itemCount}개</span>
                     </div>
 
-                    <div class="item-grid">
-                        ${itemNames.map(itemName => {
-                            const entry = itemGroups[itemName];
-                            const material = nameMap[entry.name];
-                            const owned = inventory[entry.name] || 0;
-                            const remain = Math.max(entry.count - owned, 0);
+                    ${monsterNames.map(monster => `
+                        <div class="total-card">
+                            <div class="monster-title">${monster}</div>
+                            <div class="item-grid">
+                                ${monsterGroups[monster].map(entry => {
+                                    const material = nameMap[entry.name];
+                                    const owned = inventory[entry.name] || 0;
+                                    const remain = Math.max(entry.count - owned, 0);
 
-                            return `
-                                <div class="grid-card ${remain === 0 ? "done-card" : ""}">
-                                    <div class="direct-inline-card">
-                                        <span class="total-title" onclick="searchByName('${safeText(entry.name)}')">
-                                            <span class="title-with-icon">
-                                                ${itemIcon(entry.name)}
-                                                ${displayName(entry.name)} x${entry.count}
-                                            </span>
-                                        </span>
-                                        ${itemKindBadge(material)}
-                                        ${shopBadge(material)}
-                                        ${ownedControlHtml(entry.name, entry.count)}
-                                        ${remain === 0 ? doneBadge() : ""}
-                                    </div>
-
-                                    <div class="material-drop">
-                                        <strong>드랍 몬스터:</strong> ${entry.monsters.join(", ")}
-                                    </div>
-                                </div>
-                            `;
-                        }).join("")}
-                    </div>
+                                    return `
+                                        <div class="grid-card ${remain === 0 ? "done-card" : ""}">
+                                            <div class="direct-inline-card">
+                                                <span class="total-title" onclick="searchByName('${safeText(entry.name)}')">
+                                                    <span class="title-with-icon">
+                                                        ${itemIcon(entry.name)}
+                                                        ${displayName(entry.name)} x${entry.count}
+                                                    </span>
+                                                </span>
+                                                ${itemKindBadge(material)}
+                                                ${shopBadge(material)}
+                                                ${ownedControlHtml(entry.name, entry.count)}
+                                                ${remain === 0 ? doneBadge() : ""}
+                                            </div>
+                                        </div>
+                                    `;
+                                }).join("")}
+                            </div>
+                        </div>
+                    `).join("")}
                 </div>
             `;
         }).join("")}
     `;
 }
-
+    
 function targetDetailsHtml(){
     if(targets.length === 0){
         return "목표 아이템을 추가하면 여기에 상세 재료가 표시됩니다.";
