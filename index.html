@@ -6,7 +6,7 @@
 <title>광윤이와 함께하는 더월드 세상</title>
 
 <style>
-body{font-family:Arial,sans-serif;max-width:1600px;margin:auto;padding:20px;background:#f5f5f5;}
+body{font-family:Arial,sans-serif;max-width:2000px;margin:auto;padding:20px;background:#f5f5f5;}
 h1{text-align:center;}
 input{width:100%;padding:12px;font-size:18px;border:1px solid #ccc;border-radius:8px;box-sizing:border-box;}
 button{cursor:pointer;border:none;border-radius:6px;padding:7px 10px;margin:4px;}
@@ -27,7 +27,7 @@ button{cursor:pointer;border:none;border-radius:6px;padding:7px 10px;margin:4px;
 
 .farm-layout{
     display:grid;
-    grid-template-columns:minmax(0,1fr) 420px;
+    grid-template-columns:720px minmax(0,1fr);
     gap:16px;
     align-items:start;
 }
@@ -85,6 +85,18 @@ button{cursor:pointer;border:none;border-radius:6px;padding:7px 10px;margin:4px;
 .target-chip span{cursor:default;}
 .target-chip button{background:#ef4444;color:white;padding:2px 6px;margin:0;font-size:12px;}
 
+#targetDetails{
+    display:grid;
+    grid-template-columns:repeat(2,1fr);
+    gap:8px;
+}
+
+#craftMaterials{
+    display:grid;
+    grid-template-columns:repeat(4,1fr);
+    gap:8px;
+}
+
 .total-card,.material-card,.craft-card,.target-detail-card{
     background:#f8f8f8;
     border:1px solid #ddd;
@@ -114,7 +126,7 @@ button{cursor:pointer;border:none;border-radius:6px;padding:7px 10px;margin:4px;
 
 .item-grid{
     display:grid;
-    grid-template-columns:repeat(2,1fr);
+    grid-template-columns:repeat(4,1fr);
     gap:8px;
     margin-top:8px;
 }
@@ -159,10 +171,10 @@ button{cursor:pointer;border:none;border-radius:6px;padding:7px 10px;margin:4px;
 .remain.done-text{color:#16a34a;}
 
 .craft-card{
-    display:grid;
-    grid-template-columns:1.6fr 1fr;
-    gap:10px;
-    align-items:center;
+    display:flex;
+    flex-direction:column;
+    gap:8px;
+    align-items:stretch;
 }
 
 .craft-left{min-width:0;}
@@ -227,11 +239,15 @@ button{cursor:pointer;border:none;border-radius:6px;padding:7px 10px;margin:4px;
 @media(max-width:1100px){
     .farm-layout{grid-template-columns:1fr;}
     .side-panel{position:static;}
+    #targetDetails{grid-template-columns:1fr;}
+    #craftMaterials{grid-template-columns:1fr;}
+    .item-grid{grid-template-columns:1fr;}
 }
 
 @media(max-width:700px){
+    #targetDetails{grid-template-columns:1fr;}
+    #craftMaterials{grid-template-columns:1fr;}
     .item-grid{grid-template-columns:1fr;}
-    .craft-card{grid-template-columns:1fr;}
     .row-card{align-items:flex-start;}
     .item-controls{margin-left:0;flex-wrap:wrap;}
 }
@@ -265,6 +281,12 @@ button{cursor:pointer;border:none;border-radius:6px;padding:7px 10px;margin:4px;
 
 <div id="farmTab" class="tab-content">
     <div class="farm-layout">
+
+        <div class="side-panel">
+            <h2>목표 아이템 상세</h2>
+            <div id="targetDetails" class="small">목표 아이템을 추가하면 여기에 상세 재료가 표시됩니다.</div>
+        </div>
+
         <div class="planner">
             <h2>목표 아이템 목록</h2>
             <div id="targetList" class="target-row small">아직 추가된 목표 아이템이 없습니다.</div>
@@ -287,10 +309,6 @@ button{cursor:pointer;border:none;border-radius:6px;padding:7px 10px;margin:4px;
             </div>
         </div>
 
-        <div class="side-panel">
-            <h2>목표 아이템 상세</h2>
-            <div id="targetDetails" class="small">목표 아이템을 추가하면 여기에 상세 재료가 표시됩니다.</div>
-        </div>
     </div>
 </div>
 
@@ -596,6 +614,7 @@ function toggleCraftOwned(name, needCount){
     saveInventory();
     updatePlanner();
 }
+
 function toggleCraftMaterialOwned(name, needCount){
     const current = inventory[name] || 0;
 
@@ -610,6 +629,7 @@ function toggleCraftMaterialOwned(name, needCount){
     saveInventory();
     updatePlanner();
 }
+
 function toggleTargetDetailMaterialOwned(name, needCount, targetIndex){
     const usedBefore = getUsedMaterialBeforeTarget(targetIndex, name);
     const currentTotal = inventory[name] || 0;
@@ -813,6 +833,7 @@ function isTargetComplete(targetName){
         return isMaterialComplete(materialName, count);
     });
 }
+
 function getUsedMaterialBeforeTarget(targetIndex, materialName){
     let used = 0;
 
