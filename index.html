@@ -18,23 +18,6 @@ button{cursor:pointer;border:none;border-radius:6px;padding:7px 10px;margin:4px;
 .tab-content{display:none;}
 .tab-content.active{display:block;}
 
-.custom-tooltip{
-    position:fixed;
-    z-index:9999;
-    display:none;
-    max-width:360px;
-    background:#111827;
-    color:#f9fafb;
-    border:2px solid #facc15;
-    border-radius:8px;
-    padding:12px;
-    font-size:13px;
-    line-height:1.5;
-    box-shadow:0 8px 20px rgba(0,0,0,0.35);
-    pointer-events:none;
-    white-space:pre-line;
-}
-    
 .add-btn{background:#2563eb;color:white;}
 .clear-btn{background:#555;color:white;}
 .reset-btn{background:#dc2626;color:white;}
@@ -486,81 +469,6 @@ function itemIcon(itemName, small=false){
         >
     `;
 }
-function targetDetailItemIcon(itemName, small=false){
-    if(!itemName) return "";
-
-    return `
-        <img
-            class="${small ? "item-icon-small" : "item-icon"}"
-            src="${getItemIcon(itemName)}"
-            onmouseenter="showCustomTooltip(event, '${safeText(itemName)}')"
-            onmousemove="moveCustomTooltip(event)"
-            onmouseleave="hideCustomTooltip()"
-            onerror="this.style.display='none'"
-        >
-    `;
-}
-    
-function itemTooltipText(itemName){
-    const item = nameMap[itemName];
-    if(!item) return displayName(itemName);
-
-    const lines = [displayName(itemName)];
-
-    if(item.stats){
-        const statKeys = Object.keys(item.stats).filter(
-            key => key !== "active" && key !== "spec"
-        );
-
-        if(statKeys.length > 0){
-            lines.push("");
-            lines.push("[아이템 옵션]");
-
-            statKeys.forEach(key => {
-                let value = item.stats[key];
-
-                if(key.toLowerCase().includes("percent") && typeof value === "number"){
-                    value = (value * 100) + "%";
-                }
-
-                lines.push(`${key}: ${value}`);
-            });
-        }
-
-        if(Array.isArray(item.stats.active) && item.stats.active.length > 0){
-            lines.push("");
-            lines.push("[사용 효과]");
-            item.stats.active.forEach(effect => lines.push(effect));
-        }
-    }
-
-    return lines.join("\n");
-}
-
-function showCustomTooltip(event, itemName){
-    const tooltip = document.getElementById("customTooltip");
-    if(!tooltip) return;
-
-    tooltip.textContent = itemTooltipText(itemName);
-    tooltip.style.display = "block";
-    moveCustomTooltip(event);
-}
-
-function moveCustomTooltip(event){
-    const tooltip = document.getElementById("customTooltip");
-    if(!tooltip) return;
-
-    tooltip.style.left = (event.clientX + 16) + "px";
-    tooltip.style.top = (event.clientY + 16) + "px";
-}
-
-function hideCustomTooltip(){
-    const tooltip = document.getElementById("customTooltip");
-    if(!tooltip) return;
-
-    tooltip.style.display = "none";
-}    
-    
 function targetDetailItemIcon(itemName, small=false){
     if(!itemName) return "";
 
@@ -1306,7 +1214,7 @@ function targetDetailsHtml(){
                         <div>
                             <span class="detail-material-name">
                                 <span class="title-with-icon">
-                                    ${targetDetailItemIcon(item.name, true)}
+                                    ${itemIcon(item.name, true)}
                                     ${displayName(item.name)} x1
                                 </span>
                             </span>
@@ -1493,6 +1401,5 @@ ${item.stats && item.stats.active && item.stats.active.length ? `
 }
 </script>
 
-<div id="customTooltip" class="custom-tooltip"></div>            
 </body>
 </html>
