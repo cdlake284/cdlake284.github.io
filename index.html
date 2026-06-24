@@ -1082,7 +1082,6 @@ function targetDetailsHtml(){
                                     </span>
                                     ${itemKindBadge(material)}
                                     ${shopBadge(material)}
-                                    ${done ? doneBadge() : missingBadge()}
                                 </div>
                                 <div class="small">상태: ${statusText}</div>
                             </div>
@@ -1122,7 +1121,6 @@ function targetDetailsHtml(){
                         </span>
                     </span>
                     ${itemKindBadge(item)}
-                    ${targetDone ? doneBadge() : missingBadge()}
                 </div>
                 <div class="small" style="margin-top:6px;">
                     ${targetDone ? "현재 재료 기준으로 제작 가능" : "아직 필요한 재료가 남아있음"}
