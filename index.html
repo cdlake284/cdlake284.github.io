@@ -18,6 +18,19 @@ button{cursor:pointer;border:none;border-radius:6px;padding:7px 10px;margin:4px;
 .tab-content{display:none;}
 .tab-content.active{display:block;}
 
+.rainbow-title span:nth-child(7n+1){color:#ef4444;}
+.rainbow-title span:nth-child(7n+2){color:#f97316;}
+.rainbow-title span:nth-child(7n+3){color:#eab308;}
+.rainbow-title span:nth-child(7n+4){color:#22c55e;}
+.rainbow-title span:nth-child(7n+5){color:#3b82f6;}
+.rainbow-title span:nth-child(7n+6){color:#6366f1;}
+.rainbow-title span:nth-child(7n){color:#a855f7;}
+
+.rainbow-title{
+    font-weight:900;
+    letter-spacing:1px;
+}    
+
 .add-btn{background:#2563eb;color:white;}
 .clear-btn{background:#555;color:white;}
 .reset-btn{background:#dc2626;color:white;}
@@ -142,7 +155,15 @@ button{cursor:pointer;border:none;border-radius:6px;padding:7px 10px;margin:4px;
 
 <body>
 
-<h1>광윤이와 함께하는 더월드 세상</h1>
+<h1 class="rainbow-title">
+    <span>광</span><span>윤</span><span>이</span><span>와</span>
+    <span> </span>
+    <span>함</span><span>께</span><span>하</span><span>는</span>
+    <span> </span>
+    <span>더</span><span>월</span><span>드</span>
+    <span> </span>
+    <span>세</span><span>상</span>
+</h1>
 
 <div class="tab-wrap">
     <button class="tab-btn active" onclick="showTab('itemTab')">아이템 정보</button>
