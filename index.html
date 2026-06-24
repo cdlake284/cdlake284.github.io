@@ -96,7 +96,7 @@ button{cursor:pointer;border:none;border-radius:6px;padding:7px 10px;margin:4px;
     grid-template-columns:repeat(4,1fr);
     gap:8px;
 }
-    
+
 .total-card,.material-card,.craft-card,.target-detail-card{
     background:#f8f8f8;
     border:1px solid #ddd;
@@ -109,7 +109,7 @@ button{cursor:pointer;border:none;border-radius:6px;padding:7px 10px;margin:4px;
     background:white;
     border:2px solid #d1d5db;
 }
-    
+
 .done-card{background:#ecfdf5;border-color:#86efac;}
 
 .monster-title{
@@ -135,7 +135,7 @@ button{cursor:pointer;border:none;border-radius:6px;padding:7px 10px;margin:4px;
     background:#f8f8f8;
     border:1px solid #ddd;
     border-radius:8px;
-    padding:10px;
+    padding:8px;
 }
 
 .grid-card.done-card{background:#ecfdf5;border-color:#86efac;}
@@ -148,27 +148,50 @@ button{cursor:pointer;border:none;border-radius:6px;padding:7px 10px;margin:4px;
     flex-wrap:wrap;
 }
 
-.item-controls{
+.item-main{
     display:flex;
     align-items:center;
-    gap:8px;
-    flex-wrap:nowrap;
-    margin-left:auto;
-}
-    
-.item-controls{
-    display:flex;
-    align-items:center;
-    gap:8px;
-    flex-wrap:nowrap;
-    margin-left:8px;
+    gap:6px;
+    flex-wrap:wrap;
+    flex:1;
+    min-width:0;
 }
 
-.qty-btn{background:#e5e7eb;font-weight:bold;padding:4px 9px;}
-.qty-num{font-weight:bold;min-width:20px;text-align:center;}
+.item-controls{
+    display:flex;
+    align-items:center;
+    gap:3px;
+    flex-wrap:nowrap;
+    margin-left:8px;
+    font-size:13px;
+}
+
+.qty-btn{
+    background:#e5e7eb;
+    font-weight:bold;
+    padding:2px 6px;
+    margin:1px;
+}
+
+.qty-num{font-weight:bold;min-width:16px;text-align:center;}
 .remain{font-weight:bold;white-space:nowrap;}
 .remain.need{color:#dc2626;}
 .remain.done-text{color:#16a34a;}
+
+.direct-inline-card{
+    display:flex;
+    align-items:center;
+    gap:6px;
+    flex-wrap:wrap;
+}
+
+.direct-inline-card .item-controls{
+    margin-left:2px;
+}
+
+.direct-inline-card .kind{
+    margin-left:2px;
+}
 
 .craft-card{
     display:flex;
@@ -283,36 +306,36 @@ button{cursor:pointer;border:none;border-radius:6px;padding:7px 10px;margin:4px;
     <div class="farm-layout">
 
         <div class="side-panel">
-    <h2>목표 아이템 상세</h2>
+            <h2>목표 아이템 상세</h2>
 
-    <div id="targetList" class="target-row small">아직 추가된 목표 아이템이 없습니다.</div>
+            <div id="targetList" class="target-row small">아직 추가된 목표 아이템이 없습니다.</div>
 
-    <div style="margin-top:8px;">
-        <button class="clear-btn" onclick="clearTargets()">목록 전체 삭제</button>
-        <button class="reset-btn" onclick="clearInventory()">보유 수량 초기화</button>
+            <div style="margin-top:8px;">
+                <button class="clear-btn" onclick="clearTargets()">목록 전체 삭제</button>
+                <button class="reset-btn" onclick="clearInventory()">보유 수량 초기화</button>
+            </div>
+
+            <div id="targetDetails" class="small">목표 아이템을 추가하면 여기에 상세 재료가 표시됩니다.</div>
+        </div>
+
+        <div class="planner">
+            <div class="section">
+                <h2>파밍 진행도</h2>
+                <div id="progressArea"></div>
+            </div>
+
+            <div class="section">
+                <h2>조합 필요 아이템</h2>
+                <div id="craftMaterials" class="small">조합 아이템이 있으면 여기에 표시됩니다.</div>
+            </div>
+
+            <div class="section">
+                <h2>직접 파밍 필요 재료</h2>
+                <div id="totalMaterials" class="small">목표 아이템을 추가하면 여기에 총합이 표시됩니다.</div>
+            </div>
+        </div>
+
     </div>
-
-    <div id="targetDetails" class="small">목표 아이템을 추가하면 여기에 상세 재료가 표시됩니다.</div>
-</div>
-
-<div class="planner">
-    <div class="section">
-        <h2>파밍 진행도</h2>
-        <div id="progressArea"></div>
-    </div>
-
-    <div class="section">
-        <h2>조합 필요 아이템</h2>
-        <div id="craftMaterials" class="small">조합 아이템이 있으면 여기에 표시됩니다.</div>
-    </div>
-
-    <div class="section">
-        <h2>직접 파밍 필요 재료</h2>
-        <div id="totalMaterials" class="small">목표 아이템을 추가하면 여기에 총합이 표시됩니다.</div>
-    </div>
-</div>
-
-</div>
 </div>
 
 <script>
@@ -689,7 +712,6 @@ function ownedControlHtml(name, needCount){
     return `
         <div class="item-controls">
             <span>필요 ${needCount}</span>
-            <span>보유</span>
             <button class="qty-btn" onclick="removeOwned('${safeText(name)}')">-</button>
             <span class="qty-num">${owned}</span>
             <button class="qty-btn" onclick="addOwned('${safeText(name)}')">+</button>
@@ -991,19 +1013,17 @@ function directMaterialsHtml(directTotals){
 
                         return `
                             <div class="grid-card ${remain === 0 ? "done-card" : ""}">
-                                <div class="row-card">
-                                    <div class="item-main">
-                                        <span class="total-title" onclick="searchByName('${safeText(entry.name)}')">
-                                            <span class="title-with-icon">
-                                                ${itemIcon(entry.name)}
-                                                ${displayName(entry.name)} x${entry.count}
-                                            </span>
+                                <div class="direct-inline-card">
+                                    <span class="total-title" onclick="searchByName('${safeText(entry.name)}')">
+                                        <span class="title-with-icon">
+                                            ${itemIcon(entry.name)}
+                                            ${displayName(entry.name)} x${entry.count}
                                         </span>
-                                        ${itemKindBadge(material)}
-                                        ${shopBadge(material)}
-                                        ${remain === 0 ? doneBadge() : ""}
-                                    </div>
+                                    </span>
+                                    ${itemKindBadge(material)}
+                                    ${shopBadge(material)}
                                     ${ownedControlHtml(entry.name, entry.count)}
+                                    ${remain === 0 ? doneBadge() : ""}
                                 </div>
                             </div>
                         `;
