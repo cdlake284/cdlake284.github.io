@@ -23,13 +23,22 @@ button{cursor:pointer;border:none;border-radius:6px;padding:7px 10px;margin:4px;
 .reset-btn{background:#dc2626;color:white;}
 
 .item,.planner,.side-panel{
-    background:#3f3f46;
-    border:1px solid #27272a;
+    background:white;
+    border:1px solid #ddd;
     border-radius:10px;
     padding:18px;
     margin-top:12px;
-    color:white;
 }
+.panel-title{
+    background:#3f3f46;
+    color:white;
+    margin:-18px -18px 15px -18px;
+    padding:12px 18px;
+    border-radius:10px 10px 0 0;
+    font-size:24px;
+    font-weight:bold;
+}
+    
 .section{margin-top:16px;padding-top:12px;border-top:1px solid #ddd;}
 .small{color:#666;font-size:14px;}
 
@@ -155,7 +164,7 @@ button{cursor:pointer;border:none;border-radius:6px;padding:7px 10px;margin:4px;
 <div id="farmTab" class="tab-content">
     <div class="farm-layout">
         <div class="side-panel">
-            <h2>목표 아이템 상세</h2>
+            <div class="panel-title">목표 아이템 상세</div>
             <div id="targetList" class="target-row small">아직 추가된 목표 아이템이 없습니다.</div>
 
             <div style="margin-top:8px;">
@@ -168,19 +177,18 @@ button{cursor:pointer;border:none;border-radius:6px;padding:7px 10px;margin:4px;
 
         <div>
     <div class="planner">
-        <h2>파밍 진행도</h2>
-        <div id="progressArea"></div>
-    </div>
+    <div class="panel-title">파밍 진행도</div>
+    <div id="progressArea"></div>
+</div>
 
     <div class="planner">
-        <h2>조합 필요 아이템</h2>
-        <div id="craftMaterials" class="small">조합 아이템이 있으면 여기에 표시됩니다.</div>
-    </div>
-
+    <div class="panel-title">조합 필요 아이템</div>
+    <div id="craftMaterials"></div>
+</div>
+            
     <div class="planner">
-        <h2>직접 파밍 필요 재료</h2>
-        <div id="totalMaterials" class="small">목표 아이템을 추가하면 여기에 총합이 표시됩니다.</div>
-    </div>
+    <div class="panel-title">직접 파밍 필요 재료</div>
+    <div id="totalMaterials"></div>
 </div>
 
 <script>
