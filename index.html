@@ -616,9 +616,9 @@ function syncCraftOwnedState(){
     Object.keys(craftTotals).forEach(craftName => {
         const needCount = craftTotals[craftName];
 
-        const completeByMaterials = isCraftCompleteByMaterials(craftName, needCount);
+        const completeByDirectMaterials = isCraftCompleteByDirectMaterialsOnly(craftName, needCount);
 
-        if(completeByMaterials){
+        if(completeByDirectMaterials){
             inventory[craftName] = needCount;
         }else{
             inventory[craftName] = 0;
@@ -713,6 +713,18 @@ function isCraftCompleteByMaterials(craftName, needCount){
     });
 }
 
+function isCraftCompleteByDirectMaterialsOnly(craftName, needCount){
+    const item = nameMap[craftName];
+    if(!item || !Array.isArray(item.recipe)) return false;
+
+    return item.recipe.every(obj => {
+        const materialName = Object.keys(obj)[0];
+        const count = obj[materialName] * needCount;
+
+        return (inventory[materialName] || 0) >= count;
+    });
+}    
+    
 function isMaterialComplete(materialName, needCount){
     const material = nameMap[materialName];
 
