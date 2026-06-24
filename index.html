@@ -283,33 +283,36 @@ button{cursor:pointer;border:none;border-radius:6px;padding:7px 10px;margin:4px;
     <div class="farm-layout">
 
         <div class="side-panel">
-            <h2>목표 아이템 상세</h2>
-            <div id="targetDetails" class="small">목표 아이템을 추가하면 여기에 상세 재료가 표시됩니다.</div>
-        </div>
+    <h2>목표 아이템 상세</h2>
 
-        <div class="planner">
-            <h2>목표 아이템 목록</h2>
-            <div id="targetList" class="target-row small">아직 추가된 목표 아이템이 없습니다.</div>
-            <button class="clear-btn" onclick="clearTargets()">목록 전체 삭제</button>
-            <button class="reset-btn" onclick="clearInventory()">보유 수량 초기화</button>
+    <div id="targetList" class="target-row small">아직 추가된 목표 아이템이 없습니다.</div>
 
-            <div class="section">
-                <h2>파밍 진행도</h2>
-                <div id="progressArea"></div>
-            </div>
-
-            <div class="section">
-                <h2>조합 필요 아이템</h2>
-                <div id="craftMaterials" class="small">조합 아이템이 있으면 여기에 표시됩니다.</div>
-            </div>
-
-            <div class="section">
-                <h2>직접 파밍 필요 재료</h2>
-                <div id="totalMaterials" class="small">목표 아이템을 추가하면 여기에 총합이 표시됩니다.</div>
-            </div>
-        </div>
-
+    <div style="margin-top:8px;">
+        <button class="clear-btn" onclick="clearTargets()">목록 전체 삭제</button>
+        <button class="reset-btn" onclick="clearInventory()">보유 수량 초기화</button>
     </div>
+
+    <div id="targetDetails" class="small">목표 아이템을 추가하면 여기에 상세 재료가 표시됩니다.</div>
+</div>
+
+<div class="planner">
+    <div class="section">
+        <h2>파밍 진행도</h2>
+        <div id="progressArea"></div>
+    </div>
+
+    <div class="section">
+        <h2>조합 필요 아이템</h2>
+        <div id="craftMaterials" class="small">조합 아이템이 있으면 여기에 표시됩니다.</div>
+    </div>
+
+    <div class="section">
+        <h2>직접 파밍 필요 재료</h2>
+        <div id="totalMaterials" class="small">목표 아이템을 추가하면 여기에 총합이 표시됩니다.</div>
+    </div>
+</div>
+
+</div>
 </div>
 
 <script>
