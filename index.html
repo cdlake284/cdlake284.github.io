@@ -1097,7 +1097,6 @@ function targetDetailsHtml(){
                                         </span>
                                     </span>
                                     ${itemKindBadge(material)}
-                                    ${shopBadge(material)}
                                 </div>
                                 <div class="small">상태: ${statusText}</div>
                             </div>
@@ -1118,7 +1117,6 @@ function targetDetailsHtml(){
                                 </span>
                             </span>
                             ${itemKindBadge(item)}
-                            ${shopBadge(item)}
                         </div>
                         <div class="small">상태: ${Math.min(owned, 1)} / 1</div>
                     </div>
@@ -1156,7 +1154,7 @@ function updatePlanner(){
 
     if(targetBox) targetBox.innerHTML = targetChipsHtml();
     if(miniTargetBox) miniTargetBox.innerHTML = targetChipsHtml();
-    if(targetDetailsBox) targetDetailsBox.innerHTML = targetDetailsHtml();
+    if(targetDetailsBox) targetDetailsBox.innerHTML = ;
 
     if(targets.length === 0){
         totalBox.innerHTML = "목표 아이템을 추가하면 여기에 총합이 표시됩니다.";
