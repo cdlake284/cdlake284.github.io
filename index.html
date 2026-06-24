@@ -187,6 +187,13 @@ button{cursor:pointer;border:none;border-radius:6px;padding:7px 10px;margin:4px;
 
 .simple-material:hover{background:#e2e8f0;}
 
+.simple-material.done-card{
+    background:#ecfdf5;
+    border-color:#86efac;
+    color:#166534;
+    font-weight:bold;
+}
+
 .detail-material-list{
     margin-top:8px;
     display:flex;
@@ -567,6 +574,19 @@ function toggleCraftOwned(name, needCount){
     updatePlanner();
 }
 
+function toggleCraftMaterialOwned(name, needCount){
+    const current = inventory[name] || 0;
+
+    if(current >= needCount){
+        inventory[name] = 0;
+    }else{
+        inventory[name] = needCount;
+    }
+
+    saveInventory();
+    updatePlanner();
+}
+
 function isCraftOwned(name, needCount){
     return (inventory[name] || 0) >= needCount;
 }
@@ -741,8 +761,10 @@ function craftSimpleMaterialsHtml(craftName, needCount){
             ${item.recipe.map(obj => {
                 const materialName = Object.keys(obj)[0];
                 const count = obj[materialName] * needCount;
+                const done = isMaterialComplete(materialName, count);
+
                 return `
-                    <span class="simple-material" onclick="searchByName('${safeText(materialName)}')">
+                    <span class="simple-material ${done ? "done-card" : ""}" onclick="toggleCraftMaterialOwned('${safeText(materialName)}', ${count})">
                         ${itemIcon(materialName, true)}
                         ${displayName(materialName)} x${count}
                     </span>
@@ -921,7 +943,7 @@ function targetDetailsHtml(){
                         return `
                             <div class="detail-material ${done ? "done-card" : ""}">
                                 <div>
-                                    <span class="detail-material-name" onclick="searchByName('${safeText(materialName)}')">
+                                    <span class="detail-material-name" onclick="toggleCraftMaterialOwned('${safeText(materialName)}', ${count})">
                                         <span class="title-with-icon">
                                             ${itemIcon(materialName, true)}
                                             ${displayName(materialName)} x${count}
@@ -943,7 +965,7 @@ function targetDetailsHtml(){
                 <div class="detail-material-list">
                     <div class="detail-material ${owned >= 1 ? "done-card" : ""}">
                         <div>
-                            <span class="detail-material-name" onclick="searchByName('${safeText(item.name)}')">
+                            <span class="detail-material-name" onclick="toggleCraftMaterialOwned('${safeText(item.name)}', 1)">
                                 <span class="title-with-icon">
                                     ${itemIcon(item.name, true)}
                                     ${displayName(item.name)} x1
