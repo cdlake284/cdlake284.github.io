@@ -97,6 +97,10 @@ button{cursor:pointer;border:none;border-radius:6px;padding:7px 10px;margin:4px;
 .difficulty-section{margin-top:14px;padding:12px;border:2px solid #d1d5db;border-radius:10px;background:#fff;}
 .difficulty-title{font-size:22px;font-weight:800;margin-bottom:10px;color:#111827;display:flex;align-items:center;gap:8px;}
 .difficulty-count{font-size:13px;font-weight:700;background:#e5e7eb;color:#374151;padding:3px 8px;border-radius:999px;}
+.difficulty-section.diff-sealed{
+    border-color:#94a3b8;
+    background:#f8fafc;
+}
 .difficulty-section.diff-trash{border-color:#d1d5db;background:#f9fafb;}
 .difficulty-section.diff-low{border-color:#93c5fd;background:#eff6ff;}
 .difficulty-section.diff-mid{border-color:#fcd34d;background:#fffbeb;}
@@ -284,12 +288,13 @@ const monsterNameMap = {
   "Wallachia Wraith": "왈라키아 망령",
   "Walrus": "월러스",
   "White Murloc": "하얀 멀록",
-  "Wings of Death": "죽음의 날개",
+  "Wings of Death": "데드렉트",
   "Zombie Lord": "좀비로드"
 };
 
 const difficultyOrder = [
     "잡몹",
+    "봉인 무기",
     "하위",
     "대강급",
     "대왕급",
@@ -356,7 +361,7 @@ const monsterDifficultyMap = {
   "해신 하이드라": "하위",
   "스캐럽": "잡몹",
   "해양 수호자": "잡몹",
-  "봉인된 무기": "잡몹",
+  "봉인된 무기": "봉인된 무기",
   "암흑룡 이르베르트": "대왕급",
   "상점": "잡몹",
   "실버백 울프": "잡몹",
@@ -384,7 +389,7 @@ const monsterDifficultyMap = {
   "왈라키아 망령": "하위",
   "월러스": "잡몹",
   "하얀 멀록": "잡몹",
-  "죽음의 날개": "잡몹",
+  "데드렉트": "하위",
   "좀비로드": "대왕급"
 };
 
@@ -411,6 +416,7 @@ function getMonsterDifficulty(monsterName){
     return monsterDifficultyMap[monsterName] || "난이도 미지정";
 }
 function difficultyClassName(diff){
+    if(diff === "봉인 무기") return "diff-sealed";
     if(diff === "잡몹") return "diff-trash";
     if(diff === "하위") return "diff-low";
     if(diff === "대강급") return "diff-mid";
