@@ -552,6 +552,13 @@ function addTarget(itemName){
         saveTargets();
         updatePlanner();
     }
+
+    const searchInput = document.getElementById("search");
+
+    if(searchInput){
+        searchInput.focus();
+        searchInput.select();
+    }
 }
 
 function removeTarget(itemName){
