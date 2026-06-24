@@ -97,6 +97,10 @@ button{cursor:pointer;border:none;border-radius:6px;padding:7px 10px;margin:4px;
 .difficulty-section{margin-top:14px;padding:12px;border:2px solid #d1d5db;border-radius:10px;background:#fff;}
 .difficulty-title{font-size:22px;font-weight:800;margin-bottom:10px;color:#111827;display:flex;align-items:center;gap:8px;}
 .difficulty-count{font-size:13px;font-weight:700;background:#e5e7eb;color:#374151;padding:3px 8px;border-radius:999px;}
+.difficulty-section.diff-sealed{
+    border-color:#94a3b8;
+    background:#f8fafc;
+}
 .difficulty-section.diff-trash{border-color:#d1d5db;background:#f9fafb;}
 .difficulty-section.diff-low{border-color:#93c5fd;background:#eff6ff;}
 .difficulty-section.diff-mid{border-color:#fcd34d;background:#fffbeb;}
@@ -256,7 +260,7 @@ const monsterNameMap = {
   "Ruler of the Lav Sea Hydra": "해신 하이드라",
   "Scarab": "스캐럽",
   "Sea Guardian": "해양 수호자",
-  "Sealed Weapon": "봉인된 무기",
+  "Sealed Weapon": "봉인된 무기 중 선택",
   "Shadow Dragon Irbert": "암흑룡 이르베르트",
   "Shop": "상점",
   "Silverback Wolf": "실버백 울프",
@@ -290,6 +294,7 @@ const monsterNameMap = {
 
 const difficultyOrder = [
     "잡몹",
+    "봉인 무기",
     "하위",
     "대강급",
     "대왕급",
@@ -297,7 +302,7 @@ const difficultyOrder = [
     "라지기스카",
     "난이도 미지정"
 ];
-
+    
 const monsterDifficultyMap = {
   "아가레스": "데발화해아",
   "에인션트 엔트": "대왕급",
@@ -356,7 +361,7 @@ const monsterDifficultyMap = {
   "해신 하이드라": "하위",
   "스캐럽": "잡몹",
   "해양 수호자": "잡몹",
-  "봉인된 무기": "잡몹",
+  "봉인된 무기 중 선택": "봉인 무기",
   "암흑룡 이르베르트": "대왕급",
   "상점": "잡몹",
   "실버백 울프": "잡몹",
@@ -411,6 +416,7 @@ function getMonsterDifficulty(monsterName){
     return monsterDifficultyMap[monsterName] || "난이도 미지정";
 }
 function difficultyClassName(diff){
+    if(diff === "봉인된 무기") return "diff-sealed";
     if(diff === "잡몹") return "diff-trash";
     if(diff === "하위") return "diff-low";
     if(diff === "대강급") return "diff-mid";
