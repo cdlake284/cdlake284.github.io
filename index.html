@@ -610,6 +610,22 @@ function toggleCraftMaterialOwned(name, needCount){
     saveInventory();
     updatePlanner();
 }
+function toggleTargetDetailMaterialOwned(name, needCount, targetIndex){
+    const usedBefore = getUsedMaterialBeforeTarget(targetIndex, name);
+    const currentTotal = inventory[name] || 0;
+    const currentForThisCard = Math.max(currentTotal - usedBefore, 0);
+
+    if(currentForThisCard >= needCount){
+        inventory[name] = Math.max(currentTotal - needCount, 0);
+    }else{
+        inventory[name] = currentTotal + needCount;
+    }
+
+    syncCraftOwnedState();
+    saveInventory();
+    updatePlanner();
+}
+    
 function syncCraftOwnedState(){
     const {craftTotals} = getPlannerData();
 
@@ -1012,7 +1028,7 @@ function targetDetailsHtml(){
                         }
 
                         return `
-                            <div class="detail-material ${done ? "done-card" : ""}" onclick="${isCraftItem(material) ? `toggleCraftOwned('${safeText(materialName)}', ${count})` : `toggleCraftMaterialOwned('${safeText(materialName)}', ${count})`}">
+                            <div class="detail-material ${done ? "done-card" : ""}" onclick="${isCraftItem(material) ? `toggleCraftOwned('${safeText(materialName)}', ${count})` : `toggleTargetDetailMaterialOwned('${safeText(materialName)}', ${count}, ${targetIndex})`}">
                                 <div>
                                     <span class="detail-material-name">
                                         <span class="title-with-icon">
