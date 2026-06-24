@@ -990,7 +990,7 @@ function targetDetailsHtml(){
                         }
 
                         return `
-                            <div class="detail-material ${done ? "done-card" : ""}" onclick="toggleCraftMaterialOwned('${safeText(materialName)}', ${count})">
+                            <div class="detail-material ${done ? "done-card" : ""}" onclick="${isCraftItem(material) ? `toggleCraftOwned('${safeText(materialName)}', ${count})` : `toggleCraftMaterialOwned('${safeText(materialName)}', ${count})`}">
                                 <div>
                                     <span class="detail-material-name">
                                         <span class="title-with-icon">
