@@ -1308,18 +1308,20 @@ function render(keyword){
     }
 
     const lower = normalizeSearchText(keyword);
-const keywordChosung = getChosung(lower);
+const isOnlyChosung = /^[ㄱ-ㅎ]+$/.test(lower);
 
 const results = items.filter(item => {
     const korean = normalizeSearchText(item.koreanname || "");
     const english = normalizeSearchText(item.name || "");
     const koreanChosung = normalizeSearchText(getChosung(item.koreanname || ""));
 
+    if(isOnlyChosung){
+        return koreanChosung.includes(lower);
+    }
+
     return (
         korean.includes(lower) ||
-        english.includes(lower) ||
-        koreanChosung.includes(lower) ||
-        koreanChosung.includes(keywordChosung)
+        english.includes(lower)
     );
 }).slice(0, 30);
 
