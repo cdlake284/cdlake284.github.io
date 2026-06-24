@@ -954,21 +954,41 @@ function directMaterialsHtml(directTotals){
         const count = directTotals[name];
 
         const monsters = hasDropInfo(material)
-            ? material.dropped_by.map(displayMonsterName)
-            : ["드랍 몬스터 정보 없음"];
+            ? material.dropped_by.map(monster => {
+                return {
+                    original: monster,
+                    display: displayMonsterName(monster),
+                    difficulty: getMonsterDifficulty(displayMonsterName(monster))
+                };
+            })
+            : [{
+                original: "드랍 몬스터 정보 없음",
+                display: "드랍 몬스터 정보 없음",
+                difficulty: "난이도 미지정"
+            }];
 
-        monsters.forEach(monster => {
-            const difficulty = getMonsterDifficulty(monster);
+        const difficultySet = [...new Set(monsters.map(m => m.difficulty))];
 
-            if(!difficultyGroups[difficulty]){
-                difficultyGroups[difficulty] = {};
+        difficultySet.forEach(diff => {
+            if(!difficultyGroups[diff]){
+                difficultyGroups[diff] = {};
             }
 
-            if(!difficultyGroups[difficulty][monster]){
-                difficultyGroups[difficulty][monster] = [];
+            if(!difficultyGroups[diff][name]){
+                difficultyGroups[diff][name] = {
+                    name,
+                    count,
+                    monsters: []
+                };
             }
 
-            difficultyGroups[difficulty][monster].push({name, count});
+            monsters
+                .filter(m => m.difficulty === diff)
+                .forEach(m => {
+                    if(!difficultyGroups[diff][name].monsters.includes(m.display)){
+                        difficultyGroups[diff][name].monsters.push(m.display);
+                    }
+                });
         });
     });
 
@@ -985,7 +1005,7 @@ function directMaterialsHtml(directTotals){
     }
 
     return `
-        <h3>몬스터별 파밍 리스트</h3>
+        <h3>아이템별 파밍 리스트</h3>
 
         <div class="sort-control">
             <strong>난이도 정렬:</strong>
@@ -996,9 +1016,9 @@ function directMaterialsHtml(directTotals){
         </div>
 
         ${visibleDifficulty.map(diff => {
-            const monsterGroups = difficultyGroups[diff];
-            const monsterNames = Object.keys(monsterGroups).sort();
-            const itemCount = monsterNames.reduce((sum, monster) => sum + monsterGroups[monster].length, 0);
+            const itemGroups = difficultyGroups[diff];
+            const itemNames = Object.keys(itemGroups).sort((a,b) => displayName(a).localeCompare(displayName(b), "ko"));
+            const itemCount = itemNames.length;
 
             return `
                 <div class="difficulty-section ${difficultyClassName(diff)}">
@@ -1007,35 +1027,35 @@ function directMaterialsHtml(directTotals){
                         <span class="difficulty-count">${itemCount}개</span>
                     </div>
 
-                    ${monsterNames.map(monster => `
-                        <div class="total-card">
-                            <div class="monster-title">${monster}</div>
-                            <div class="item-grid">
-                                ${monsterGroups[monster].map(entry => {
-                                    const material = nameMap[entry.name];
-                                    const owned = inventory[entry.name] || 0;
-                                    const remain = Math.max(entry.count - owned, 0);
+                    <div class="item-grid">
+                        ${itemNames.map(itemName => {
+                            const entry = itemGroups[itemName];
+                            const material = nameMap[entry.name];
+                            const owned = inventory[entry.name] || 0;
+                            const remain = Math.max(entry.count - owned, 0);
 
-                                    return `
-                                        <div class="grid-card ${remain === 0 ? "done-card" : ""}">
-                                            <div class="direct-inline-card">
-                                                <span class="total-title" onclick="searchByName('${safeText(entry.name)}')">
-                                                    <span class="title-with-icon">
-                                                        ${itemIcon(entry.name)}
-                                                        ${displayName(entry.name)} x${entry.count}
-                                                    </span>
-                                                </span>
-                                                ${itemKindBadge(material)}
-                                                ${shopBadge(material)}
-                                                ${ownedControlHtml(entry.name, entry.count)}
-                                                ${remain === 0 ? doneBadge() : ""}
-                                            </div>
-                                        </div>
-                                    `;
-                                }).join("")}
-                            </div>
-                        </div>
-                    `).join("")}
+                            return `
+                                <div class="grid-card ${remain === 0 ? "done-card" : ""}">
+                                    <div class="direct-inline-card">
+                                        <span class="total-title" onclick="searchByName('${safeText(entry.name)}')">
+                                            <span class="title-with-icon">
+                                                ${itemIcon(entry.name)}
+                                                ${displayName(entry.name)} x${entry.count}
+                                            </span>
+                                        </span>
+                                        ${itemKindBadge(material)}
+                                        ${shopBadge(material)}
+                                        ${ownedControlHtml(entry.name, entry.count)}
+                                        ${remain === 0 ? doneBadge() : ""}
+                                    </div>
+
+                                    <div class="material-drop">
+                                        <strong>드랍 몬스터:</strong> ${entry.monsters.join(", ")}
+                                    </div>
+                                </div>
+                            `;
+                        }).join("")}
+                    </div>
                 </div>
             `;
         }).join("")}
