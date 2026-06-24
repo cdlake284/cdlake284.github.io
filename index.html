@@ -82,7 +82,7 @@ button{cursor:pointer;border:none;border-radius:6px;padding:7px 10px;margin:4px;
 
 .target-row{display:flex;flex-wrap:wrap;gap:6px;align-items:center;}
 .target-chip{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;margin:3px;}
-.target-chip span{cursor:pointer;}
+.target-chip span{cursor:default;}
 .target-chip button{background:#ef4444;color:white;padding:2px 6px;margin:0;font-size:12px;}
 
 .total-card,.material-card,.craft-card,.target-detail-card{
@@ -636,7 +636,7 @@ function targetChipsHtml(){
     return targets.map(name => `
         <div class="target-chip">
             ${itemIcon(name, true)}
-            <span onclick="searchByName('${safeText(name)}')">${displayName(name)}</span>
+            <span>${displayName(name)}</span>
             <button onclick="removeTarget('${safeText(name)}')">X</button>
         </div>
     `).join("");
