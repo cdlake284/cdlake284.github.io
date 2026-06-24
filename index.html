@@ -206,6 +206,7 @@ button{cursor:pointer;border:none;border-radius:6px;padding:7px 10px;margin:4px;
     border:1px solid #e5e7eb;
     border-radius:8px;
     padding:8px;
+    cursor:pointer;
 }
 
 .detail-material.done-card{
@@ -623,12 +624,10 @@ function ownedControlHtml(name, needCount){
 }
 
 function craftOwnedControlHtml(name, needCount, done){
-    const owned = isCraftOwned(name, needCount);
-
     return `
         <div class="item-controls">
-            <button class="owned-toggle ${owned ? "active" : ""}" onclick="toggleCraftOwned('${safeText(name)}', ${needCount})">
-                ${owned ? "보유" : "미보유"}
+            <button class="owned-toggle ${done ? "active" : ""}" onclick="toggleCraftOwned('${safeText(name)}', ${needCount})">
+                ${done ? "보유중" : "미보유"}
             </button>
             <span class="remain ${done ? "done-text" : "need"}">
                 ${done ? "완료" : "미완료"}
@@ -941,9 +940,9 @@ function targetDetailsHtml(){
                         }
 
                         return `
-                            <div class="detail-material ${done ? "done-card" : ""}">
+                            <div class="detail-material ${done ? "done-card" : ""}" onclick="toggleCraftMaterialOwned('${safeText(materialName)}', ${count})">
                                 <div>
-                                    <span class="detail-material-name" onclick="toggleCraftMaterialOwned('${safeText(materialName)}', ${count})">
+                                    <span class="detail-material-name">
                                         <span class="title-with-icon">
                                             ${itemIcon(materialName, true)}
                                             ${displayName(materialName)} x${count}
@@ -963,9 +962,9 @@ function targetDetailsHtml(){
             const owned = inventory[item.name] || 0;
             materialList = `
                 <div class="detail-material-list">
-                    <div class="detail-material ${owned >= 1 ? "done-card" : ""}">
+                    <div class="detail-material ${owned >= 1 ? "done-card" : ""}" onclick="toggleCraftMaterialOwned('${safeText(item.name)}', 1)">
                         <div>
-                            <span class="detail-material-name" onclick="toggleCraftMaterialOwned('${safeText(item.name)}', 1)">
+                            <span class="detail-material-name">
                                 <span class="title-with-icon">
                                     ${itemIcon(item.name, true)}
                                     ${displayName(item.name)} x1
