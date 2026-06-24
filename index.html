@@ -407,6 +407,28 @@ function displayName(name){
     const found = nameMap[name];
     return found ? (found.koreanname || found.name) : name;
 }
+const CHOSUNG_LIST = [
+    "ㄱ","ㄲ","ㄴ","ㄷ","ㄸ","ㄹ","ㅁ","ㅂ","ㅃ","ㅅ",
+    "ㅆ","ㅇ","ㅈ","ㅉ","ㅊ","ㅋ","ㅌ","ㅍ","ㅎ"
+];
+
+function getChosung(text){
+    return String(text || "").split("").map(char => {
+        const code = char.charCodeAt(0) - 44032;
+
+        if(code >= 0 && code <= 11171){
+            return CHOSUNG_LIST[Math.floor(code / 588)];
+        }
+
+        return char;
+    }).join("");
+}
+
+function normalizeSearchText(text){
+    return String(text || "")
+        .toLowerCase()
+        .replace(/\s/g, "");
+}
 
 function displayMonsterName(name){
     return monsterNameMap[name] || name;
@@ -1240,12 +1262,21 @@ function render(keyword){
         return;
     }
 
-    const lower = keyword.toLowerCase();
+    const lower = normalizeSearchText(keyword);
+const keywordChosung = getChosung(lower);
 
-    const results = items.filter(item =>
-        (item.koreanname || "").toLowerCase().includes(lower) ||
-        (item.name || "").toLowerCase().includes(lower)
-    ).slice(0, 30);
+const results = items.filter(item => {
+    const korean = normalizeSearchText(item.koreanname || "");
+    const english = normalizeSearchText(item.name || "");
+    const koreanChosung = normalizeSearchText(getChosung(item.koreanname || ""));
+
+    return (
+        korean.includes(lower) ||
+        english.includes(lower) ||
+        koreanChosung.includes(lower) ||
+        koreanChosung.includes(keywordChosung)
+    );
+}).slice(0, 30);
 
     if(results.length === 0){
         box.innerHTML = "<p>검색 결과가 없습니다.</p>";
