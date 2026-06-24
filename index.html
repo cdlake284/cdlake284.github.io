@@ -6,7 +6,7 @@
 <title>광윤이와 함께하는 더월드 세상</title>
 
 <style>
-body{font-family:Arial,sans-serif;max-width:2800px;margin:auto;padding:20px;background:#f5f5f5;}
+body{font-family:Arial,sans-serif;max-width:2000px;margin:auto;padding:20px;background:#f5f5f5;}
 h1{text-align:center;}
 input{width:100%;padding:12px;font-size:18px;border:1px solid #ccc;border-radius:8px;box-sizing:border-box;}
 button{cursor:pointer;border:none;border-radius:6px;padding:7px 10px;margin:4px;}
@@ -84,7 +84,7 @@ button{cursor:pointer;border:none;border-radius:6px;padding:7px 10px;margin:4px;
 .target-chip{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;margin:3px;}
 .target-chip span{cursor:default;}
 .target-chip button{background:#ef4444;color:white;padding:2px 6px;margin:0;font-size:12px;}
-    
+
 #targetDetails{
     display:grid;
     grid-template-columns:repeat(2,1fr);
@@ -285,13 +285,14 @@ button{cursor:pointer;border:none;border-radius:6px;padding:7px 10px;margin:4px;
         <div class="side-panel">
     <h2>목표 아이템 상세</h2>
 
-<div id="targetList" class="target-row small">
-    아직 추가된 목표 아이템이 없습니다.
-</div>
+    <div id="targetList" class="target-row small">아직 추가된 목표 아이템이 없습니다.</div>
 
-<div style="margin-top:8px;">
-    <button class="clear-btn" onclick="clearTargets()">목록 전체 삭제</button>
-    <button class="reset-btn" onclick="clearInventory()">보유 수량 초기화</button>
+    <div style="margin-top:8px;">
+        <button class="clear-btn" onclick="clearTargets()">목록 전체 삭제</button>
+        <button class="reset-btn" onclick="clearInventory()">보유 수량 초기화</button>
+    </div>
+
+    <div id="targetDetails" class="small">목표 아이템을 추가하면 여기에 상세 재료가 표시됩니다.</div>
 </div>
 
 <div class="planner">
