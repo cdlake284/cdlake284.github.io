@@ -797,7 +797,28 @@ function isTargetComplete(targetName){
         return isMaterialComplete(materialName, count);
     });
 }
+function getUsedMaterialBeforeTarget(targetIndex, materialName){
+    let used = 0;
 
+    for(let i = 0; i < targetIndex; i++){
+        const targetName = targets[i];
+        const item = nameMap[targetName];
+
+        if(!item || !Array.isArray(item.recipe)) continue;
+
+        item.recipe.forEach(obj => {
+            const name = Object.keys(obj)[0];
+            const count = obj[name];
+
+            if(name === materialName){
+                used += count;
+            }
+        });
+    }
+
+    return used;
+}
+    
 function craftSimpleMaterialsHtml(craftName, needCount){
     const item = nameMap[craftName];
 
@@ -958,7 +979,7 @@ function targetDetailsHtml(){
         return "목표 아이템을 추가하면 여기에 상세 재료가 표시됩니다.";
     }
 
-    return targets.map(targetName => {
+    return targets.map((targetName, targetIndex) => {
         const item = nameMap[targetName];
         if(!item) return "";
 
@@ -973,8 +994,9 @@ function targetDetailsHtml(){
                         const materialName = Object.keys(obj)[0];
                         const count = obj[materialName];
                         const material = nameMap[materialName];
-                        const done = isMaterialComplete(materialName, count);
-                        const owned = inventory[materialName] || 0;
+                        const usedBefore = getUsedMaterialBeforeTarget(targetIndex, materialName);
+                        const owned = Math.max((inventory[materialName] || 0) - usedBefore, 0);
+                        const done = owned >= count;
 
                         let statusText = "";
                         if(isCraftItem(material)){
