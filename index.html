@@ -361,7 +361,7 @@ const monsterDifficultyMap = {
   "해신 하이드라": "하위",
   "스캐럽": "잡몹",
   "해양 수호자": "잡몹",
-  "봉인된 무기 중 선택": "봉인 무기",
+  "봉인된 무기 중 선택": "봉인된 무기-마법사 왕",
   "암흑룡 이르베르트": "대왕급",
   "상점": "잡몹",
   "실버백 울프": "잡몹",
@@ -416,7 +416,7 @@ function getMonsterDifficulty(monsterName){
     return monsterDifficultyMap[monsterName] || "난이도 미지정";
 }
 function difficultyClassName(diff){
-    if(diff === "봉인된 무기") return "diff-sealed";
+    if(diff === "봉인된 무기-마법사 왕") return "diff-sealed";
     if(diff === "잡몹") return "diff-trash";
     if(diff === "하위") return "diff-low";
     if(diff === "대강급") return "diff-mid";
