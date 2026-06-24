@@ -97,6 +97,17 @@ button{cursor:pointer;border:none;border-radius:6px;padding:7px 10px;margin:4px;
     gap:8px;
 }
 
+#totalMaterials{
+    display:grid;
+    grid-template-columns:repeat(4,1fr);
+    gap:8px;
+    align-items:start;
+}
+
+#totalMaterials h3{
+    grid-column:1 / -1;
+}
+    
 .total-card,.material-card,.craft-card,.target-detail-card{
     background:#f8f8f8;
     border:1px solid #ddd;
@@ -108,8 +119,9 @@ button{cursor:pointer;border:none;border-radius:6px;padding:7px 10px;margin:4px;
 .total-card{
     background:white;
     border:2px solid #d1d5db;
+    margin:0;
 }
-
+    
 .done-card{background:#ecfdf5;border-color:#86efac;}
 
 .monster-title{
@@ -126,7 +138,7 @@ button{cursor:pointer;border:none;border-radius:6px;padding:7px 10px;margin:4px;
 
 .item-grid{
     display:grid;
-    grid-template-columns:repeat(4,1fr);
+    grid-template-columns:1fr;
     gap:8px;
     margin-top:8px;
 }
