@@ -1301,10 +1301,16 @@ const results = items.filter(item => {
                 목표에 추가
             </button>
 
-            <p><strong>영문명:</strong> ${item.name || "-"}</p>
             <p><strong>종류:</strong> ${item.type || "-"}</p>
             <p><strong>등급:</strong> ${item.rank || "-"}</p>
-            <p><strong>설명:</strong> ${item.description || "-"}</p>
+            ${item.active && item.active.length ? `
+<div style="margin-top:8px;">
+    <strong>사용 효과:</strong>
+    <ul style="margin:4px 0 0 20px;">
+        ${item.active.map(effect => `<li>${effect}</li>`).join("")}
+    </ul>
+</div>
+` : ""}
 
             ${!isCraftItem(item) ? `<p><strong>드랍 몬스터:</strong> ${droppedByText(item)}</p>` : ""}
 
