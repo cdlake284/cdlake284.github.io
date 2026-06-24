@@ -28,13 +28,43 @@ button{cursor:pointer;border:none;border-radius:6px;padding:7px 10px;margin:4px;
 
 .rainbow-title{
     font-weight:900;
-    font-size:48px;
+    font-size:56px;
     letter-spacing:2px;
-    text-shadow:
-        2px 2px 0 #000,
-        4px 4px 8px rgba(0,0,0,0.3);
 }
+@keyframes sparkle{
+    0%,80%,100%{
+        filter:brightness(1);
+        text-shadow:none;
+    }
 
+    40%{
+        filter:brightness(2);
+        text-shadow:
+            0 0 8px white,
+            0 0 16px white,
+            0 0 24px white;
+    }
+}
+.rainbow-title span{
+    animation:sparkle 2.5s infinite;
+}
+.rainbow-title span:nth-child(1){animation-delay:0s;}
+.rainbow-title span:nth-child(2){animation-delay:0.1s;}
+.rainbow-title span:nth-child(3){animation-delay:0.2s;}
+.rainbow-title span:nth-child(4){animation-delay:0.3s;}
+.rainbow-title span:nth-child(5){animation-delay:0.4s;}
+.rainbow-title span:nth-child(6){animation-delay:0.5s;}
+.rainbow-title span:nth-child(7){animation-delay:0.6s;}
+.rainbow-title span:nth-child(8){animation-delay:0.7s;}
+.rainbow-title span:nth-child(9){animation-delay:0.8s;}
+.rainbow-title span:nth-child(10){animation-delay:0.9s;}
+.rainbow-title span:nth-child(11){animation-delay:1.0s;}
+.rainbow-title span:nth-child(12){animation-delay:1.1s;}
+.rainbow-title span:nth-child(13){animation-delay:1.2s;}
+.rainbow-title span:nth-child(14){animation-delay:1.3s;}
+.rainbow-title span:nth-child(15){animation-delay:1.4s;}
+.rainbow-title span:nth-child(16){animation-delay:1.5s;}
+    
 .add-btn{background:#2563eb;color:white;}
 .clear-btn{background:#555;color:white;}
 .reset-btn{background:#dc2626;color:white;}
