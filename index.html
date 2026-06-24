@@ -1303,11 +1303,30 @@ const results = items.filter(item => {
 
             <p><strong>종류:</strong> ${item.type || "-"}</p>
             <p><strong>등급:</strong> ${item.rank || "-"}</p>
-            ${item.active && item.active.length ? `
+           ${item.stats ? `
+<div style="margin-top:8px;">
+    <strong>아이템 옵션:</strong>
+    <ul style="margin:4px 0 0 20px;">
+        ${Object.keys(item.stats)
+            .filter(key => key !== "active" && key !== "spec")
+            .map(key => {
+                let value = item.stats[key];
+
+                if(key.toLowerCase().includes("percent") && typeof value === "number"){
+                    value = (value * 100) + "%";
+                }
+
+                return `<li>${key}: ${value}</li>`;
+            }).join("")}
+    </ul>
+</div>
+` : ""}
+
+${item.stats && item.stats.active && item.stats.active.length ? `
 <div style="margin-top:8px;">
     <strong>사용 효과:</strong>
     <ul style="margin:4px 0 0 20px;">
-        ${item.active.map(effect => `<li>${effect}</li>`).join("")}
+        ${item.stats.active.map(effect => `<li>${effect}</li>`).join("")}
     </ul>
 </div>
 ` : ""}
