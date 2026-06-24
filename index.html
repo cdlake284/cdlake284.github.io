@@ -569,12 +569,33 @@ function removeOwned(name){
 }
 
 function toggleCraftOwned(name, needCount){
-    const current = inventory[name] || 0;
-    inventory[name] = current >= needCount ? 0 : needCount;
+    const item = nameMap[name];
+    const done = isCraftCompleteByMaterials(name, needCount);
+
+    if(done){
+        inventory[name] = 0;
+
+        if(item && Array.isArray(item.recipe)){
+            item.recipe.forEach(obj => {
+                const materialName = Object.keys(obj)[0];
+                inventory[materialName] = 0;
+            });
+        }
+    }else{
+        inventory[name] = needCount;
+
+        if(item && Array.isArray(item.recipe)){
+            item.recipe.forEach(obj => {
+                const materialName = Object.keys(obj)[0];
+                const count = obj[materialName] * needCount;
+                inventory[materialName] = count;
+            });
+        }
+    }
+
     saveInventory();
     updatePlanner();
 }
-
 function toggleCraftMaterialOwned(name, needCount){
     const current = inventory[name] || 0;
 
@@ -584,10 +605,27 @@ function toggleCraftMaterialOwned(name, needCount){
         inventory[name] = needCount;
     }
 
+    syncCraftOwnedState();
+
     saveInventory();
     updatePlanner();
 }
+function syncCraftOwnedState(){
+    const {craftTotals} = getPlannerData();
 
+    Object.keys(craftTotals).forEach(craftName => {
+        const needCount = craftTotals[craftName];
+
+        const completeByMaterials = isCraftCompleteByMaterials(craftName, needCount);
+
+        if(completeByMaterials){
+            inventory[craftName] = needCount;
+        }else{
+            inventory[craftName] = 0;
+        }
+    });
+}
+    
 function isCraftOwned(name, needCount){
     return (inventory[name] || 0) >= needCount;
 }
