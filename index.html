@@ -81,7 +81,14 @@ button{cursor:pointer;border:none;border-radius:6px;padding:7px 10px;margin:4px;
 .difficulty-section{margin-top:14px;padding:12px;border:2px solid #d1d5db;border-radius:10px;background:#fff;}
 .difficulty-title{font-size:22px;font-weight:800;margin-bottom:10px;color:#111827;display:flex;align-items:center;gap:8px;}
 .difficulty-count{font-size:13px;font-weight:700;background:#e5e7eb;color:#374151;padding:3px 8px;border-radius:999px;}
-
+.difficulty-section.diff-trash{border-color:#d1d5db;background:#f9fafb;}
+.difficulty-section.diff-low{border-color:#93c5fd;background:#eff6ff;}
+.difficulty-section.diff-mid{border-color:#fcd34d;background:#fffbeb;}
+.difficulty-section.diff-king{border-color:#fca5a5;background:#fff1f2;}
+.difficulty-section.diff-final{border-color:#c4b5fd;background:#f5f3ff;}
+.difficulty-section.diff-last{border-color:#a7f3d0;background:#ecfdf5;}
+.difficulty-section.diff-unknown{border-color:#9ca3af;background:#f3f4f6;}
+    
 .craft-card{display:flex;flex-direction:column;gap:8px;align-items:stretch;}
 .craft-material-list{display:flex;flex-wrap:wrap;gap:6px;justify-content:flex-start;}
 .simple-material{display:inline-flex;align-items:center;background:#f1f5f9;border:1px solid #e2e8f0;border-radius:999px;padding:5px 9px;font-size:13px;cursor:pointer;white-space:nowrap;}
@@ -152,22 +159,20 @@ button{cursor:pointer;border:none;border-radius:6px;padding:7px 10px;margin:4px;
             <div id="targetDetails" class="small">목표 아이템을 추가하면 여기에 상세 재료가 표시됩니다.</div>
         </div>
 
-        <div class="planner">
-            <div class="section">
-                <h2>파밍 진행도</h2>
-                <div id="progressArea"></div>
-            </div>
+        <div>
+    <div class="planner">
+        <h2>파밍 진행도</h2>
+        <div id="progressArea"></div>
+    </div>
 
-            <div class="section">
-                <h2>조합 필요 아이템</h2>
-                <div id="craftMaterials" class="small">조합 아이템이 있으면 여기에 표시됩니다.</div>
-            </div>
+    <div class="planner">
+        <h2>조합 필요 아이템</h2>
+        <div id="craftMaterials" class="small">조합 아이템이 있으면 여기에 표시됩니다.</div>
+    </div>
 
-            <div class="section">
-                <h2>직접 파밍 필요 재료</h2>
-                <div id="totalMaterials" class="small">목표 아이템을 추가하면 여기에 총합이 표시됩니다.</div>
-            </div>
-        </div>
+    <div class="planner">
+        <h2>직접 파밍 필요 재료</h2>
+        <div id="totalMaterials" class="small">목표 아이템을 추가하면 여기에 총합이 표시됩니다.</div>
     </div>
 </div>
 
@@ -389,6 +394,15 @@ function displayMonsterName(name){
 
 function getMonsterDifficulty(monsterName){
     return monsterDifficultyMap[monsterName] || "난이도 미지정";
+}
+function difficultyClassName(diff){
+    if(diff === "잡몹") return "diff-trash";
+    if(diff === "하위") return "diff-low";
+    if(diff === "대강급") return "diff-mid";
+    if(diff === "대왕급") return "diff-king";
+    if(diff === "데발화해아") return "diff-final";
+    if(diff === "라지기스카") return "diff-last";
+    return "diff-unknown";
 }
 
 function changeDifficultySort(value){
@@ -972,7 +986,7 @@ function directMaterialsHtml(directTotals){
             const itemCount = monsterNames.reduce((sum, monster) => sum + monsterGroups[monster].length, 0);
 
             return `
-                <div class="difficulty-section">
+                <div class="difficulty-section ${difficultyClassName(diff)}">
                     <div class="difficulty-title">
                         ${diff}
                         <span class="difficulty-count">${itemCount}개</span>
