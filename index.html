@@ -781,11 +781,29 @@ function handleMaterialForPlanner(materialName, count, directTotals, craftTotals
     }
 }
 
+function isTargetUsedByAnotherTarget(targetName){
+    return targets.some(otherTargetName => {
+        if(otherTargetName === targetName) return false;
+
+        const otherItem = nameMap[otherTargetName];
+        if(!otherItem || !Array.isArray(otherItem.recipe)) return false;
+
+        return otherItem.recipe.some(obj => {
+            const materialName = Object.keys(obj)[0];
+            return materialName === targetName;
+        });
+    });
+}
+
 function getPlannerData(){
     const directTotals = {};
     const craftTotals = {};
 
     targets.forEach(targetName => {
+        if(isTargetUsedByAnotherTarget(targetName)){
+            return;
+        }
+
         const item = nameMap[targetName];
         if(!item) return;
 
